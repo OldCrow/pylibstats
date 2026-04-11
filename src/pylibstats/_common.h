@@ -7,36 +7,35 @@
 
 #include <cmath>
 #include <random>
-#include <span>
 #include <vector>
 
 namespace nb = nanobind;
 
-/// NumPy array type aliases for nanobind
+/// NumPy array type alias for contiguous float64 input
 using NpArrayIn = nb::ndarray<const double, nb::ndim<1>, nb::c_contig, nb::device::cpu>;
-using NpArrayOut = nb::ndarray<double, nb::ndim<1>, nb::c_contig, nb::device::cpu>;
-using NpArrayOwned = nb::ndarray<nb::numpy, double, nb::ndim<1>>;
 
 // ---------------------------------------------------------------------------
-// Batch helper: allocate output array + call span-based method with GIL released
+// Helper: convert std::vector<double> → owned NumPy array (copies data once)
 // ---------------------------------------------------------------------------
 
-/// Generic batch wrapper that calls a member taking (span<const double>, span<double>).
-/// The member pointer is passed as a template parameter to avoid std::function overhead.
-template <typename Dist,
-          void (Dist::*Method)(std::span<const double>, std::span<double>,
-                               const detail::PerformanceHint&) const>
-NpArrayOwned batch_call(const Dist& dist, NpArrayIn input) {
-    const size_t n = input.shape(0);
-    auto result = nb::ndarray<nb::numpy, double, nb::ndim<1>>(/* shape = */ {n});
-    double* out_ptr = result.data();
-    const double* in_ptr = input.data();
-    {
-        nb::gil_scoped_release release;
-        (dist.*Method)(std::span<const double>{in_ptr, n},
-                       std::span<double>{out_ptr, n}, {});
-    }
-    return result;
+inline nb::object vec_to_numpy(const std::vector<double>& vec) {
+    const size_t n = vec.size();
+    // Wrap raw pointer with nullptr owner → nanobind copies on return
+    return nb::ndarray<nb::numpy, const double, nb::ndim<1>>(
+               vec.data(), {n}, nb::handle()).cast();
+}
+
+inline nb::object vec_to_numpy(std::vector<double>&& vec) {
+    // Move into a heap-allocated vector so the capsule can own it
+    auto* owned = new std::vector<double>(std::move(vec));
+    nb::capsule deleter(owned, [](void* p) noexcept {
+        delete static_cast<std::vector<double>*>(p);
+    });
+    const size_t n = owned->size();
+    return nb::cast(
+        nb::ndarray<nb::numpy, double, nb::ndim<1>>(
+            owned->data(), {n}, deleter),
+        nb::rv_policy::move);
 }
 
 // ---------------------------------------------------------------------------
@@ -59,23 +58,49 @@ void bind_common_methods(PyClass& cls) {
             nb::arg("p"), "Quantile function (inverse CDF). Returns x such that P(X <= x) = p.");
 
     // -- Batch probability functions (NumPy arrays, GIL-releasing) ------------
+    // Uses getBatchProbabilities / getBatchLogProbabilities / getBatchCumulativeProbabilities
+    // from DistributionBase, which auto-dispatch to SIMD/parallel internally.
     cls.def("pdf",
-            &batch_call<Dist, &Dist::getProbability>,
+            [](const Dist& d, NpArrayIn x) -> nb::object {
+                std::vector<double> input(x.data(), x.data() + x.shape(0));
+                std::vector<double> result;
+                {
+                    nb::gil_scoped_release release;
+                    result = d.getBatchProbabilities(input);
+                }
+                return vec_to_numpy(std::move(result));
+            },
             nb::arg("x").noconvert(),
             "Batch PDF: accepts a 1-D float64 NumPy array, returns array of densities.")
 
        .def("log_pdf",
-            &batch_call<Dist, &Dist::getLogProbability>,
+            [](const Dist& d, NpArrayIn x) -> nb::object {
+                std::vector<double> input(x.data(), x.data() + x.shape(0));
+                std::vector<double> result;
+                {
+                    nb::gil_scoped_release release;
+                    result = d.getBatchLogProbabilities(input);
+                }
+                return vec_to_numpy(std::move(result));
+            },
             nb::arg("x").noconvert(),
             "Batch log-PDF: accepts a 1-D float64 NumPy array.")
 
        .def("cdf",
-            &batch_call<Dist, &Dist::getCumulativeProbability>,
+            [](const Dist& d, NpArrayIn x) -> nb::object {
+                std::vector<double> input(x.data(), x.data() + x.shape(0));
+                std::vector<double> result;
+                {
+                    nb::gil_scoped_release release;
+                    result = d.getBatchCumulativeProbabilities(input);
+                }
+                return vec_to_numpy(std::move(result));
+            },
             nb::arg("x").noconvert(),
             "Batch CDF: accepts a 1-D float64 NumPy array.");
 
     // -- Fitting --------------------------------------------------------------
-    cls.def("fit", [](Dist& d, nb::ndarray<const double, nb::ndim<1>, nb::c_contig, nb::device::cpu> data) {
+    cls.def("fit", [](Dist& d, NpArrayIn data) {
                 std::vector<double> vec(data.data(), data.data() + data.shape(0));
                 d.fit(vec);
             },
@@ -84,7 +109,7 @@ void bind_common_methods(PyClass& cls) {
 
     // -- Sampling -------------------------------------------------------------
     cls.def("sample",
-            [](const Dist& d, size_t n, nb::object seed) -> NpArrayOwned {
+            [](const Dist& d, size_t n, nb::object seed) -> nb::object {
                 std::mt19937 rng;
                 if (seed.is_none()) {
                     rng.seed(std::random_device{}());
@@ -92,9 +117,7 @@ void bind_common_methods(PyClass& cls) {
                     rng.seed(nb::cast<unsigned int>(seed));
                 }
                 auto samples = d.sample(rng, n);
-                auto result = nb::ndarray<nb::numpy, double, nb::ndim<1>>({n});
-                std::copy(samples.begin(), samples.end(), result.data());
-                return result;
+                return vec_to_numpy(std::move(samples));
             },
             nb::arg("n") = 1, nb::arg("seed") = nb::none(),
             "Generate random samples. Returns a 1-D NumPy array.");

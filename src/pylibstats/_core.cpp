@@ -85,12 +85,12 @@ NB_MODULE(_core, m) {
              },
              nb::arg("a") = 0.0, nb::arg("b") = 1.0)
         .def_prop_rw("a",
-            [](const UniformDistribution& d) { return d.getSupportLowerBound(); },
-            [](UniformDistribution& d, double v) { d.setA(v); },
+            [](const UniformDistribution& d) { return d.getLowerBound(); },
+            [](UniformDistribution& d, double v) { d.setLowerBound(v); },
             "Lower bound a.")
         .def_prop_rw("b",
-            [](const UniformDistribution& d) { return d.getSupportUpperBound(); },
-            [](UniformDistribution& d, double v) { d.setB(v); },
+            [](const UniformDistribution& d) { return d.getUpperBound(); },
+            [](UniformDistribution& d, double v) { d.setUpperBound(v); },
             "Upper bound b.");
     bind_common_methods<UniformDistribution>(uniform);
 
@@ -121,12 +121,12 @@ NB_MODULE(_core, m) {
              },
              nb::arg("a") = 0, nb::arg("b") = 1)
         .def_prop_rw("a",
-            [](const DiscreteDistribution& d) { return static_cast<int>(d.getSupportLowerBound()); },
-            [](DiscreteDistribution& d, int v) { d.setA(v); },
+            [](const DiscreteDistribution& d) { return d.getLowerBound(); },
+            [](DiscreteDistribution& d, int v) { d.setLowerBound(v); },
             "Lower bound a (integer).")
         .def_prop_rw("b",
-            [](const DiscreteDistribution& d) { return static_cast<int>(d.getSupportUpperBound()); },
-            [](DiscreteDistribution& d, int v) { d.setB(v); },
+            [](const DiscreteDistribution& d) { return d.getUpperBound(); },
+            [](DiscreteDistribution& d, int v) { d.setUpperBound(v); },
             "Upper bound b (integer).");
     bind_common_methods<DiscreteDistribution>(discrete);
 

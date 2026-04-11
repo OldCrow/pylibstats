@@ -47,5 +47,10 @@ nanobind_add_module(
 
 target_link_libraries(_core PRIVATE ${LIBSTATS_TARGET})
 
+# Windows: prevent min/max macros from <windows.h> colliding with std::min/max
+if(WIN32)
+    target_compile_definitions(_core PRIVATE NOMINMAX _USE_MATH_DEFINES)
+endif()
+
 # Let nanobind / scikit-build-core handle the install destination
 install(TARGETS _core LIBRARY DESTINATION pylibstats)
