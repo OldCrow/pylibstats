@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+_skbuild/
+dist/
+*.egg-info/
+*.so
+*.pyd
+*.dll
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
