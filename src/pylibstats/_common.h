@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <random>
+#include <span>
 #include <vector>
 
 namespace nb = nanobind;
@@ -15,26 +16,27 @@ namespace nb = nanobind;
 using NpArrayIn = nb::ndarray<const double, nb::ndim<1>, nb::c_contig, nb::device::cpu>;
 
 // ---------------------------------------------------------------------------
-// Helper: convert std::vector<double> → owned NumPy array (copies data once)
+// Helpers: wrap raw buffers into owned NumPy arrays
 // ---------------------------------------------------------------------------
 
-inline nb::object vec_to_numpy(const std::vector<double>& vec) {
-    const size_t n = vec.size();
-    // Wrap raw pointer with nullptr owner → nanobind copies on return
-    return nb::ndarray<nb::numpy, const double, nb::ndim<1>>(
-               vec.data(), {n}, nb::handle()).cast();
+/// Wrap a new[]-allocated buffer into a NumPy array with capsule ownership.
+/// The buffer must already be filled; caller relinquishes ownership.
+inline nb::object buf_to_numpy(double* buf, size_t n) {
+    nb::capsule owner(buf, [](void* p) noexcept { delete[] static_cast<double*>(p); });
+    return nb::cast(
+        nb::ndarray<nb::numpy, double, nb::ndim<1>>(buf, {n}, owner),
+        nb::rv_policy::move);
 }
 
+/// Convert std::vector<double> to an owned NumPy array (for sampling/fit).
 inline nb::object vec_to_numpy(std::vector<double>&& vec) {
-    // Move into a heap-allocated vector so the capsule can own it
     auto* owned = new std::vector<double>(std::move(vec));
     nb::capsule deleter(owned, [](void* p) noexcept {
         delete static_cast<std::vector<double>*>(p);
     });
     const size_t n = owned->size();
     return nb::cast(
-        nb::ndarray<nb::numpy, double, nb::ndim<1>>(
-            owned->data(), {n}, deleter),
+        nb::ndarray<nb::numpy, double, nb::ndim<1>>(owned->data(), {n}, deleter),
         nb::rv_policy::move);
 }
 
@@ -57,44 +59,50 @@ void bind_common_methods(PyClass& cls) {
        .def("ppf", [](const Dist& d, double p) { return d.getQuantile(p); },
             nb::arg("p"), "Quantile function (inverse CDF). Returns x such that P(X <= x) = p.");
 
-    // -- Batch probability functions (NumPy arrays, GIL-releasing) ------------
-    // Uses getBatchProbabilities / getBatchLogProbabilities / getBatchCumulativeProbabilities
-    // from DistributionBase, which auto-dispatch to SIMD/parallel internally.
+    // -- Batch probability functions (zero-copy span path, GIL-releasing) -----
+    // Passes NumPy buffer pointers directly to the span-based batch methods,
+    // which auto-dispatch to SIMD/parallel internally. No intermediate vector.
     cls.def("pdf",
             [](const Dist& d, NpArrayIn x) -> nb::object {
-                std::vector<double> input(x.data(), x.data() + x.shape(0));
-                std::vector<double> result;
+                const size_t n = x.shape(0);
+                auto* buf = new double[n];
                 {
                     nb::gil_scoped_release release;
-                    result = d.getBatchProbabilities(input);
+                    d.getProbability(
+                        std::span<const double>{x.data(), n},
+                        std::span<double>{buf, n});
                 }
-                return vec_to_numpy(std::move(result));
+                return buf_to_numpy(buf, n);
             },
             nb::arg("x").noconvert(),
             "Batch PDF: accepts a 1-D float64 NumPy array, returns array of densities.")
 
        .def("log_pdf",
             [](const Dist& d, NpArrayIn x) -> nb::object {
-                std::vector<double> input(x.data(), x.data() + x.shape(0));
-                std::vector<double> result;
+                const size_t n = x.shape(0);
+                auto* buf = new double[n];
                 {
                     nb::gil_scoped_release release;
-                    result = d.getBatchLogProbabilities(input);
+                    d.getLogProbability(
+                        std::span<const double>{x.data(), n},
+                        std::span<double>{buf, n});
                 }
-                return vec_to_numpy(std::move(result));
+                return buf_to_numpy(buf, n);
             },
             nb::arg("x").noconvert(),
             "Batch log-PDF: accepts a 1-D float64 NumPy array.")
 
        .def("cdf",
             [](const Dist& d, NpArrayIn x) -> nb::object {
-                std::vector<double> input(x.data(), x.data() + x.shape(0));
-                std::vector<double> result;
+                const size_t n = x.shape(0);
+                auto* buf = new double[n];
                 {
                     nb::gil_scoped_release release;
-                    result = d.getBatchCumulativeProbabilities(input);
+                    d.getCumulativeProbability(
+                        std::span<const double>{x.data(), n},
+                        std::span<double>{buf, n});
                 }
-                return vec_to_numpy(std::move(result));
+                return buf_to_numpy(buf, n);
             },
             nb::arg("x").noconvert(),
             "Batch CDF: accepts a 1-D float64 NumPy array.");
