@@ -5,6 +5,8 @@ SIMD-accelerated statistical distributions with NumPy integration.
 
 import math
 
+import numpy as np
+
 from pylibstats import _core
 
 
@@ -26,6 +28,14 @@ def _require_positive_finite(value, name):
     """Raise ValueError if *value* is not a positive finite number."""
     if not math.isfinite(value) or value <= 0.0:
         raise ValueError(f"{name} must be a positive finite number")
+
+
+def _validate_fit_data(data):
+    """Raise ValueError if *data* is empty or contains non-finite values."""
+    if len(data) == 0:
+        raise ValueError("fit() requires at least one data point")
+    if not np.all(np.isfinite(data)):
+        raise ValueError("fit() data must contain only finite values")
 
 
 def _validated_prop(parent_prop, validator, param_name, doc=None):
@@ -70,6 +80,10 @@ class Gaussian(_core.Gaussian):
     sigma = _validated_prop(_core.Gaussian.sigma, _require_positive_finite,
                             "Standard deviation", "Standard deviation parameter σ.")
 
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
 
 class Exponential(_core.Exponential):
     """Exponential distribution Exp(lambda).
@@ -93,6 +107,10 @@ class Exponential(_core.Exponential):
 
     lam = _validated_prop(_core.Exponential.lam, _require_positive_finite,
                           "Lambda (rate parameter)", "Rate parameter λ.")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
 
 
 class Uniform(_core.Uniform):
@@ -150,6 +168,10 @@ class Uniform(_core.Uniform):
             )
         _core.Uniform.b.__set__(self, value)
 
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
 
 class Poisson(_core.Poisson):
     """Poisson distribution Pois(lambda).
@@ -173,6 +195,10 @@ class Poisson(_core.Poisson):
 
     lam = _validated_prop(_core.Poisson.lam, _require_positive_finite,
                           "Lambda (rate parameter)", "Rate parameter λ.")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
 
 
 class DiscreteUniform(_core.DiscreteUniform):
@@ -226,6 +252,10 @@ class DiscreteUniform(_core.DiscreteUniform):
             )
         _core.DiscreteUniform.b.__set__(self, value)
 
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
 
 class Gamma(_core.Gamma):
     """Gamma distribution Gamma(alpha, beta).
@@ -254,6 +284,10 @@ class Gamma(_core.Gamma):
                             "Alpha (shape parameter)", "Shape parameter α.")
     beta = _validated_prop(_core.Gamma.beta, _require_positive_finite,
                            "Beta (rate parameter)", "Rate parameter β.")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
 
 
 class Beta(_core.Beta):
@@ -284,6 +318,10 @@ class Beta(_core.Beta):
     beta = _validated_prop(_core.Beta.beta, _require_positive_finite,
                            "Beta (shape parameter)", "Shape parameter β.")
 
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
 
 class ChiSquared(_core.ChiSquared):
     """Chi-squared distribution χ²(k).
@@ -308,6 +346,10 @@ class ChiSquared(_core.ChiSquared):
     k = _validated_prop(_core.ChiSquared.k, _require_positive_finite,
                         "Degrees of freedom (k)", "Degrees of freedom k.")
 
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
 
 class StudentT(_core.StudentT):
     """Student's t distribution t(nu).
@@ -331,6 +373,10 @@ class StudentT(_core.StudentT):
 
     nu = _validated_prop(_core.StudentT.nu, _require_positive_finite,
                          "Degrees of freedom (nu)", "Degrees of freedom ν.")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
 
 
 # SciPy-familiar alias
