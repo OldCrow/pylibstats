@@ -19,11 +19,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python: ["3.11", "3.12", "3.13"]
-        include:
-          # macos-latest is arm64; add an x86_64 runner for SIMD coverage
-          - os: macos-13
-            python: "3.12"
-
     steps:
       - uses: actions/checkout@v4
 
