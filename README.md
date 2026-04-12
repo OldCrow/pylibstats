@@ -8,6 +8,7 @@ Python bindings for [libstats](https://github.com/OldCrow/libstats) — a C++20 
 - **NumPy integration**: pass arrays directly to `pdf()`, `cdf()`, `log_pdf()` — the SIMD/parallel batch path runs automatically
 - **GIL-releasing**: batch operations release the Python GIL for concurrent workloads
 - **SciPy-compatible naming**: `pdf`, `cdf`, `ppf`, `fit`, `sample`
+- **Input validation**: all constructor, setter, and `fit()` parameters are validated in Python with clear `ValueError` messages
 
 ## Quick start
 
@@ -49,6 +50,28 @@ This fetches libstats v1.0.0 via CMake FetchContent if not already installed.
 pip install ".[test]"
 pytest
 ```
+
+## Examples
+
+See the `examples/` directory:
+
+- `basic_usage.py` — scalar/batch operations, sampling, and fitting
+- `benchmark.py` — wall-clock comparison against SciPy (PDF and CDF)
+- `scipy_comparison.py` — numerical accuracy verification across all 9 distributions
+
+## Known limitations
+
+- **Beta CDF performance**: the regularised incomplete beta function in libstats is slower than SciPy's implementation (~0.5× speedup). All other distribution/operation combinations are faster.
+
+## Contributing
+
+### macOS ABI note
+
+On macOS, libstats may be compiled with Homebrew LLVM while Python extensions use Apple clang. These ship different `libc++` versions whose exception-handling ABIs are incompatible — C++ exceptions thrown from libstats segfault during stack unwinding instead of propagating normally.
+
+pylibstats works around this by validating all parameters in pure Python (in `__init__.py`) *before* calling into the C++ layer, so the error path never crosses the ABI boundary. If you add new parameters or distribution classes, follow the same pattern: validate in Python, then delegate to `_core`.
+
+See `libstats/include/core/error_handling.h` for the upstream discussion.
 
 ## License
 
