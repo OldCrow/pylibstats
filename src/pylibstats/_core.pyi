@@ -1,20 +1,39 @@
-"""Type stubs for pylibstats._core native extension module."""
+"""Type stubs for the pylibstats._core native extension module.
+
+Internal: users should import from ``pylibstats`` (not ``pylibstats._core``)
+to get validated wrapper classes.  The public API stubs are in __init__.pyi.
+
+Mutable distribution parameters (mu, sigma, lam, etc.) are omitted here
+because the wrapper classes in __init__.py override them with validated
+Python properties.
+"""
 
 from typing import overload
 
 import numpy as np
 from numpy.typing import NDArray
 
+# ---------------------------------------------------------------------------
+# Every distribution class exposes these methods and read-only properties
+# (bound by bind_common_methods<> in _core.cpp).  Per-distribution
+# constructors and mutable parameters are listed on each class.
+# ---------------------------------------------------------------------------
+#   pdf(x), log_pdf(x), cdf(x)  — scalar and NDArray overloads
+#   ppf(p: float) -> float
+#   fit(data: NDArray[np.float64]) -> None
+#   sample(n=1, seed=None) -> NDArray[np.float64]
+#   __repr__() -> str
+#
+#   Properties (read-only):
+#     mean, variance, std, skewness, kurtosis  : float
+#     name : str
+#     support : tuple[float, float]
+#     is_discrete : bool
+#     num_parameters : int
+# ---------------------------------------------------------------------------
+
 class Gaussian:
-    """Gaussian (normal) distribution N(mu, sigma)."""
-
-    mu: float
-    """Mean parameter μ."""
-    sigma: float
-    """Standard deviation parameter σ."""
-
     def __init__(self, mu: float = 0.0, sigma: float = 1.0) -> None: ...
-
     @overload
     def pdf(self, x: float) -> float: ...
     @overload
@@ -31,7 +50,6 @@ class Gaussian:
     def fit(self, data: NDArray[np.float64]) -> None: ...
     def sample(self, n: int = 1, seed: int | None = None) -> NDArray[np.float64]: ...
     def __repr__(self) -> str: ...
-
     @property
     def mean(self) -> float: ...
     @property
@@ -52,13 +70,7 @@ class Gaussian:
     def num_parameters(self) -> int: ...
 
 class Exponential:
-    """Exponential distribution Exp(lambda)."""
-
-    lam: float
-    """Rate parameter λ."""
-
     def __init__(self, lam: float = 1.0) -> None: ...
-
     @overload
     def pdf(self, x: float) -> float: ...
     @overload
@@ -75,7 +87,6 @@ class Exponential:
     def fit(self, data: NDArray[np.float64]) -> None: ...
     def sample(self, n: int = 1, seed: int | None = None) -> NDArray[np.float64]: ...
     def __repr__(self) -> str: ...
-
     @property
     def mean(self) -> float: ...
     @property
@@ -96,15 +107,7 @@ class Exponential:
     def num_parameters(self) -> int: ...
 
 class Uniform:
-    """Continuous uniform distribution U(a, b)."""
-
-    a: float
-    """Lower bound a."""
-    b: float
-    """Upper bound b."""
-
     def __init__(self, a: float = 0.0, b: float = 1.0) -> None: ...
-
     @overload
     def pdf(self, x: float) -> float: ...
     @overload
@@ -121,7 +124,6 @@ class Uniform:
     def fit(self, data: NDArray[np.float64]) -> None: ...
     def sample(self, n: int = 1, seed: int | None = None) -> NDArray[np.float64]: ...
     def __repr__(self) -> str: ...
-
     @property
     def mean(self) -> float: ...
     @property
@@ -142,13 +144,7 @@ class Uniform:
     def num_parameters(self) -> int: ...
 
 class Poisson:
-    """Poisson distribution Pois(lambda)."""
-
-    lam: float
-    """Rate parameter λ."""
-
     def __init__(self, lam: float = 1.0) -> None: ...
-
     @overload
     def pdf(self, x: float) -> float: ...
     @overload
@@ -165,7 +161,6 @@ class Poisson:
     def fit(self, data: NDArray[np.float64]) -> None: ...
     def sample(self, n: int = 1, seed: int | None = None) -> NDArray[np.float64]: ...
     def __repr__(self) -> str: ...
-
     @property
     def mean(self) -> float: ...
     @property
@@ -186,15 +181,7 @@ class Poisson:
     def num_parameters(self) -> int: ...
 
 class DiscreteUniform:
-    """Discrete uniform distribution over integers {a, a+1, ..., b}."""
-
-    a: int
-    """Lower bound a (integer)."""
-    b: int
-    """Upper bound b (integer)."""
-
     def __init__(self, a: int = 0, b: int = 1) -> None: ...
-
     @overload
     def pdf(self, x: float) -> float: ...
     @overload
@@ -211,7 +198,6 @@ class DiscreteUniform:
     def fit(self, data: NDArray[np.float64]) -> None: ...
     def sample(self, n: int = 1, seed: int | None = None) -> NDArray[np.float64]: ...
     def __repr__(self) -> str: ...
-
     @property
     def mean(self) -> float: ...
     @property
@@ -232,15 +218,7 @@ class DiscreteUniform:
     def num_parameters(self) -> int: ...
 
 class Gamma:
-    """Gamma distribution Gamma(alpha, beta)."""
-
-    alpha: float
-    """Shape parameter α."""
-    beta: float
-    """Rate parameter β."""
-
     def __init__(self, alpha: float = 1.0, beta: float = 1.0) -> None: ...
-
     @overload
     def pdf(self, x: float) -> float: ...
     @overload
@@ -257,7 +235,6 @@ class Gamma:
     def fit(self, data: NDArray[np.float64]) -> None: ...
     def sample(self, n: int = 1, seed: int | None = None) -> NDArray[np.float64]: ...
     def __repr__(self) -> str: ...
-
     @property
     def mean(self) -> float: ...
     @property
@@ -278,15 +255,7 @@ class Gamma:
     def num_parameters(self) -> int: ...
 
 class Beta:
-    """Beta distribution Beta(alpha, beta)."""
-
-    alpha: float
-    """Shape parameter α."""
-    beta: float
-    """Shape parameter β."""
-
     def __init__(self, alpha: float = 1.0, beta: float = 1.0) -> None: ...
-
     @overload
     def pdf(self, x: float) -> float: ...
     @overload
@@ -303,7 +272,6 @@ class Beta:
     def fit(self, data: NDArray[np.float64]) -> None: ...
     def sample(self, n: int = 1, seed: int | None = None) -> NDArray[np.float64]: ...
     def __repr__(self) -> str: ...
-
     @property
     def mean(self) -> float: ...
     @property
@@ -324,13 +292,7 @@ class Beta:
     def num_parameters(self) -> int: ...
 
 class ChiSquared:
-    """Chi-squared distribution χ²(k)."""
-
-    k: float
-    """Degrees of freedom k."""
-
     def __init__(self, k: float = 1.0) -> None: ...
-
     @overload
     def pdf(self, x: float) -> float: ...
     @overload
@@ -347,7 +309,6 @@ class ChiSquared:
     def fit(self, data: NDArray[np.float64]) -> None: ...
     def sample(self, n: int = 1, seed: int | None = None) -> NDArray[np.float64]: ...
     def __repr__(self) -> str: ...
-
     @property
     def mean(self) -> float: ...
     @property
@@ -368,13 +329,7 @@ class ChiSquared:
     def num_parameters(self) -> int: ...
 
 class StudentT:
-    """Student's t distribution t(nu)."""
-
-    nu: float
-    """Degrees of freedom ν."""
-
     def __init__(self, nu: float = 1.0) -> None: ...
-
     @overload
     def pdf(self, x: float) -> float: ...
     @overload
@@ -391,7 +346,6 @@ class StudentT:
     def fit(self, data: NDArray[np.float64]) -> None: ...
     def sample(self, n: int = 1, seed: int | None = None) -> NDArray[np.float64]: ...
     def __repr__(self) -> str: ...
-
     @property
     def mean(self) -> float: ...
     @property
