@@ -17,6 +17,7 @@ test = ["pytest>=7.0", "scipy"]
 [tool.scikit-build]
 cmake.build-type = "Release"
 wheel.packages = ["src/pylibstats"]
+editable.mode = "redirect"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
