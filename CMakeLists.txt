@@ -9,6 +9,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Python + nanobind
 # ---------------------------------------------------------------------------
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+
+# scikit-build-core adds site-packages to CMAKE_PREFIX_PATH automatically.
+# For direct CMake invocation, discover nanobind via Python as a fallback.
+if(NOT nanobind_ROOT AND NOT nanobind_DIR)
+    execute_process(
+        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+        OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT
+        RESULT_VARIABLE _nanobind_rc)
+    if(NOT _nanobind_rc EQUAL 0)
+        set(nanobind_ROOT "")
+    endif()
+endif()
+
 find_package(nanobind CONFIG REQUIRED)
 
 # ---------------------------------------------------------------------------

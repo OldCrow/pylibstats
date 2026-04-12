@@ -36,13 +36,34 @@ dist.fit(samples)
 
 ## Building from source
 
-Requires Python ≥3.9, CMake ≥3.20, and a C++20 compiler.
+Requires Python ≥3.11, CMake ≥3.20, and a C++20 compiler.
 
 ```bash
 pip install .
 ```
 
 This fetches libstats v1.0.0 via CMake FetchContent if not already installed.
+
+### Building against a local libstats
+
+To link against a locally built libstats (e.g. a development branch), install
+libstats to a prefix and point `pip` at it:
+
+```bash
+# In the libstats repo
+cmake --install build --prefix /path/to/libstats/install
+
+# In this repo — use libstats_DIR, not CMAKE_PREFIX_PATH
+# (overriding CMAKE_PREFIX_PATH breaks nanobind discovery)
+pip install --no-build-isolation -ve . \
+    -Ccmake.define.libstats_DIR=/path/to/libstats/install/lib/cmake/libstats
+```
+
+`--no-build-isolation` requires build deps in the active environment:
+
+```bash
+pip install "scikit-build-core>=0.10" "nanobind>=2.0"
+```
 
 ## Running tests
 
