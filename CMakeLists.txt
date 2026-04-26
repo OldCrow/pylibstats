@@ -62,6 +62,28 @@ if(NOT libstats_FOUND)
             )
         endif()
     endforeach()
+
+    # Some Linux builders can report AVX2 runtime support while AVX runtime checks fail.
+    # In libstats, AVX2 transcendental implementations delegate to AVX functions, so this
+    # combination can leave AVX symbols undefined unless simd_avx.cpp is also built.
+    if(TARGET libstats_simd_obj AND LIBSTATS_HAS_AVX2 AND NOT LIBSTATS_HAS_AVX)
+        message(
+            STATUS
+            "libstats reported AVX2 without AVX; adding simd_avx.cpp to satisfy AVX2 symbol dependencies"
+        )
+        target_sources(libstats_simd_obj PRIVATE ${libstats_SOURCE_DIR}/src/simd_avx.cpp)
+        if(MSVC OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND WIN32))
+            set_source_files_properties(
+                ${libstats_SOURCE_DIR}/src/simd_avx.cpp
+                PROPERTIES COMPILE_FLAGS "/arch:AVX"
+            )
+        else()
+            set_source_files_properties(
+                ${libstats_SOURCE_DIR}/src/simd_avx.cpp
+                PROPERTIES COMPILE_FLAGS "-mavx"
+            )
+        endif()
+    endif()
     set(LIBSTATS_TARGET libstats_static)
 else()
     message(STATUS "Using installed libstats ${LIBSTATS_VERSION}")
