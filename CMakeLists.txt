@@ -35,7 +35,7 @@ if(NOT libstats_FOUND)
     FetchContent_Declare(
         libstats
         GIT_REPOSITORY https://github.com/OldCrow/libstats.git
-        GIT_TAG        v1.1.0
+        GIT_TAG        v1.1.1
     )
     # Disable libstats tests/tools/examples when building as a subdirectory
     set(LIBSTATS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
