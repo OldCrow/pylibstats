@@ -27,7 +27,7 @@ find_package(nanobind CONFIG REQUIRED)
 # ---------------------------------------------------------------------------
 # libstats — prefer installed package, fall back to FetchContent
 # ---------------------------------------------------------------------------
-find_package(libstats QUIET)
+find_package(libstats 1.1.3 QUIET)
 
 if(NOT libstats_FOUND)
     message(STATUS "libstats not found via find_package — using FetchContent")
@@ -35,84 +35,14 @@ if(NOT libstats_FOUND)
     FetchContent_Declare(
         libstats
         GIT_REPOSITORY https://github.com/OldCrow/libstats.git
-        GIT_TAG        v1.1.2
+        GIT_TAG        v1.1.3
     )
-    # Disable libstats tests/tools/examples when building as a subdirectory
+    # Disable libstats tests/tools/examples when building as a subdirectory.
     set(LIBSTATS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(LIBSTATS_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+    set(LIBSTATS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(BUILD_DOCS OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(libstats)
-
-    # libstats v1.1.2 applies x86 SIMD target pragmas without an architecture guard.
-    # On aarch64, GCC/Clang reject these pragmas as invalid target attributes.
-    # Patch fetched source in-place for ARM fallback builds until upstream release includes the fix.
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
-        set(_libstats_cpu_detection_file ${libstats_SOURCE_DIR}/src/cpu_detection.cpp)
-        if(EXISTS ${_libstats_cpu_detection_file})
-            file(READ ${_libstats_cpu_detection_file} _libstats_cpu_detection_source)
-            string(FIND "${_libstats_cpu_detection_source}" "#if defined(__clang__)" _legacy_guard_pos)
-            if(NOT _legacy_guard_pos EQUAL -1)
-                string(
-                    REPLACE
-                        "#if defined(__clang__)"
-                        "#if (defined(__clang__) && (defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)))"
-                        _libstats_cpu_detection_source
-                        "${_libstats_cpu_detection_source}"
-                )
-                string(
-                    REPLACE
-                        "#elif defined(__GNUC__)"
-                        "#elif (defined(__GNUC__) && (defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)))"
-                        _libstats_cpu_detection_source
-                        "${_libstats_cpu_detection_source}"
-                )
-                file(WRITE ${_libstats_cpu_detection_file} "${_libstats_cpu_detection_source}")
-                message(STATUS "Patched libstats cpu_detection x86 SIMD pragma guards for ARM builds")
-            endif()
-        endif()
-    endif()
-    # libstats currently adds examples unconditionally; exclude them from default build
-    # to avoid wheel builds failing on optional example link targets.
-    foreach(_libstats_example_target
-        quick_start_tutorial
-        basic_usage
-        distribution_families_demo
-        error_handling_demo
-        statistical_validation_demo
-        parallel_execution_demo
-        performance_learning_demo
-    )
-        if(TARGET ${_libstats_example_target})
-            set_target_properties(
-                ${_libstats_example_target}
-                PROPERTIES
-                    EXCLUDE_FROM_ALL TRUE
-                    EXCLUDE_FROM_DEFAULT_BUILD TRUE
-            )
-        endif()
-    endforeach()
-
-    # Some Linux builders can report AVX2 runtime support while AVX runtime checks fail.
-    # In libstats, AVX2 transcendental implementations delegate to AVX functions, so this
-    # combination can leave AVX symbols undefined unless simd_avx.cpp is also built.
-    if(TARGET libstats_simd_obj AND LIBSTATS_HAS_AVX2 AND NOT LIBSTATS_HAS_AVX)
-        message(
-            STATUS
-            "libstats reported AVX2 without AVX; adding simd_avx.cpp to satisfy AVX2 symbol dependencies"
-        )
-        target_sources(libstats_simd_obj PRIVATE ${libstats_SOURCE_DIR}/src/simd_avx.cpp)
-        if(MSVC OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND WIN32))
-            set_source_files_properties(
-                ${libstats_SOURCE_DIR}/src/simd_avx.cpp
-                PROPERTIES COMPILE_FLAGS "/arch:AVX"
-            )
-        else()
-            set_source_files_properties(
-                ${libstats_SOURCE_DIR}/src/simd_avx.cpp
-                PROPERTIES COMPILE_FLAGS "-mavx"
-            )
-        endif()
-    endif()
     set(LIBSTATS_TARGET libstats_static)
 else()
     message(STATUS "Using installed libstats ${LIBSTATS_VERSION}")
