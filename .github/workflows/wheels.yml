@@ -33,12 +33,14 @@ jobs:
         env:
           # macOS: build universal2 (x86_64 + arm64)
           CIBW_ARCHS_MACOS: "x86_64 arm64"
+          # nanobind uses aligned deallocation, which requires macOS 10.13+
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=10.13"
           # Linux: x86_64 and aarch64
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
           # Windows: x86_64 only
           CIBW_ARCHS_WINDOWS: "AMD64"
           # Skip PyPy, musllinux, and older Pythons
-          CIBW_SKIP: "pp* *-musllinux_* cp39-* cp310-*"
+          CIBW_SKIP: "*-musllinux_* cp39-* cp310-*"
           # Build dependencies (installed in the build environment)
           CIBW_BUILD_FRONTEND: "pip"
           # Test the built wheel

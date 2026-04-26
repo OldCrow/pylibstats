@@ -42,6 +42,26 @@ if(NOT libstats_FOUND)
     set(LIBSTATS_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
     set(BUILD_DOCS OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(libstats)
+    # libstats currently adds examples unconditionally; exclude them from default build
+    # to avoid wheel builds failing on optional example link targets.
+    foreach(_libstats_example_target
+        quick_start_tutorial
+        basic_usage
+        distribution_families_demo
+        error_handling_demo
+        statistical_validation_demo
+        parallel_execution_demo
+        performance_learning_demo
+    )
+        if(TARGET ${_libstats_example_target})
+            set_target_properties(
+                ${_libstats_example_target}
+                PROPERTIES
+                    EXCLUDE_FROM_ALL TRUE
+                    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            )
+        endif()
+    endforeach()
     set(LIBSTATS_TARGET libstats_static)
 else()
     message(STATUS "Using installed libstats ${LIBSTATS_VERSION}")
