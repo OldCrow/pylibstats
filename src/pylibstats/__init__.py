@@ -7,7 +7,7 @@ import math
 
 import numpy as np
 
-from pylibstats import _core
+from . import _core
 
 
 # ---------------------------------------------------------------------------
@@ -40,11 +40,16 @@ def _validate_fit_data(data):
 
 def _validated_prop(parent_prop, validator, param_name, doc=None):
     """Create a property that validates before delegating to a nanobind property setter."""
+
     def getter(self):
+        # nanobind property descriptors require explicit __get__/__set__ calls
+        # (not getattr/setattr) to dispatch correctly from a Python subclass.
         return parent_prop.__get__(self)
+
     def setter(self, value):
         validator(value, param_name)
         parent_prop.__set__(self, value)
+
     return property(getter, setter, doc=doc)
 
 

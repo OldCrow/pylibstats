@@ -1,10 +1,7 @@
 """Tests for pylibstats.Uniform (UniformDistribution bindings)."""
 
-import math
-
 import numpy as np
 import pytest
-from scipy import stats as sp
 
 import pylibstats
 
