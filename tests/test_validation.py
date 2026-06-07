@@ -104,12 +104,12 @@ class TestDiscreteUniformSetterValidation:
         with pytest.raises(ValueError):
             d.b = 0
 
-    def test_equal_bounds_allowed(self):
+    def test_equal_bounds_rejected(self):
+        # libstats v1.2.0: equal bounds (a == b) are now invalid (a >= b fails).
         d = pylibstats.DiscreteUniform(1, 6)
-        d.a = 3
-        d.b = 3
-        assert d.a == 3
-        assert d.b == 3
+        d.a = 3  # valid: a=3, b=6
+        with pytest.raises(ValueError):
+            d.b = 3  # a == b is now invalid
 
 
 class TestGammaSetterValidation:
