@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for working in `pylibstats`.
+This file provides project-scoped guidance to AI agents and contributors working in this repository.
 
 ## Project purpose
 
@@ -30,7 +30,7 @@ Core goals:
 
 ## Session Start Baseline Workflow (Required)
 
-At the start of every session, do these steps in order:
+**Requires Python ≥ 3.11.** At the start of every session, do these steps in order:
 
 1. Verify machine architecture (OS + CPU) and Python architecture.
 2. Select the platform-specific build path for this host.
@@ -70,9 +70,22 @@ python -m pytest tests -q
 - When the build uses local or fetched `libstats` sources, apply Catalina caveats from `../libstats/docs/BUILD_SYSTEM_GUIDE.md` (notably Homebrew LLVM 22 behavior on Catalina).
 - Treat architecture verification as mandatory before comparing performance/test outcomes.
 
+### Linux
+
+- Requires GCC ≥ 12 or Clang ≥ 14 for C++20 support.
+- If `libstats` is not found locally, CMake fetches it automatically at v1.2.0.
+
+```bash
+python -m pip install -e ".[test]" -Ccmake.build-type=Release
+python -m pytest tests -q
+```
+
 ### Windows (MSVC)
 
-- Use Visual Studio 2022 x64 generator for reproducible MSVC builds.
+> **Windows tool paths vary** by installation method (direct installer, `winget`, `chocolatey`, Microsoft Store, etc.). See libstats `AGENTS.md` for full path alternatives and auto-detection via `vswhere.exe`.
+
+- Visual Studio 2022 (Build Tools or full IDE) is required as the C++ compiler. Install from https://aka.ms/vs/17/release/vs_buildtools.exe, `winget install Microsoft.VisualStudio.2022.BuildTools`, or `choco install visualstudio2022buildtools`.
+- Use the VS 2022 x64 generator for reproducible MSVC builds (`-Ccmake.define.CMAKE_GENERATOR="Visual Studio 17 2022"`).
 - If using `libstats_DIR`, the referenced `libstats` install must be built with compatible MSVC/x64 settings.
 
 ```powershell
@@ -85,17 +98,32 @@ python -m pytest tests -q
 
 ## Common commands
 
-```powershell
-python -m pip install -e C:\Users\gdwol\Development\pylibstats
-python -m pip install ".[test]"
-python -m pytest C:\Users\gdwol\Development\pylibstats\tests -q
+Run from the repository root:
+
+```bash
+# macOS/Linux
+python -m pip install -e ".[test]"   # installs package (editable) + test dependencies
+python -m pytest tests -q
 ```
 
-Local `libstats` build override example:
+```powershell
+# Windows
+python -m pip install -e ".[test]"
+python -m pytest tests -q
+```
+
+Local `libstats` build override (replace `<libstats-install>` with the path to your `libstats` CMake installation):
+
+```bash
+# macOS/Linux
+python -m pip install --no-build-isolation -ve . \
+  -Ccmake.define.libstats_DIR=<libstats-install>/lib/cmake/libstats
+```
 
 ```powershell
-python -m pip install --no-build-isolation -ve C:\Users\gdwol\Development\pylibstats `
-  -Ccmake.define.libstats_DIR=C:\path\to\libstats\install\lib\cmake\libstats
+# Windows
+python -m pip install --no-build-isolation -ve . `
+  -Ccmake.define.libstats_DIR=<libstats-install>\lib\cmake\libstats
 ```
 
 ## Editing rules
