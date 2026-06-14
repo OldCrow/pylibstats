@@ -4,6 +4,9 @@ Measures wall-clock time for PDF and CDF evaluation on arrays of 100k and 1M
 elements across all continuous distributions. Prints a formatted table with
 per-distribution speedup ratios.
 
+Note: Von Mises, Binomial, and NegativeBinomial use scalar loops (no SIMD)
+but still benefit from cached loop-invariants vs repeated SciPy calls.
+
 Usage:
     python examples/benchmark.py
 """
@@ -66,6 +69,31 @@ DISTRIBUTIONS = [
      pylibstats.StudentT(10.0),
      sp.t(df=10),
      (-5.0, 5.0)),
+
+    ("LogNormal(0,1)",
+     pylibstats.LogNormal(0.0, 1.0),
+     sp.lognorm(s=1.0, scale=1.0),
+     (0.01, 8.0)),
+
+    ("Pareto(1,2)",
+     pylibstats.Pareto(1.0, 2.0),
+     sp.pareto(b=2.0, scale=1.0),
+     (1.0, 20.0)),
+
+    ("Weibull(2,1)",
+     pylibstats.Weibull(2.0, 1.0),
+     sp.weibull_min(c=2.0, scale=1.0),
+     (0.01, 4.0)),
+
+    ("Rayleigh(1)",
+     pylibstats.Rayleigh(1.0),
+     sp.rayleigh(scale=1.0),
+     (0.01, 6.0)),
+
+    ("VonMises(0,2)",
+     pylibstats.VonMises(0.0, 2.0),
+     sp.vonmises(kappa=2.0, loc=0.0),
+     (-3.14, 3.14)),
 ]
 
 SIZES = [100_000, 1_000_000]

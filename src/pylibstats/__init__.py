@@ -38,6 +38,24 @@ def _validate_fit_data(data):
         raise ValueError("fit() data must contain only finite values")
 
 
+def _require_non_negative_finite(value, name):
+    """Raise ValueError if *value* is not a non-negative finite number."""
+    if not math.isfinite(value) or value < 0.0:
+        raise ValueError(f"{name} must be a non-negative finite number")
+
+
+def _require_probability(value, name):
+    """Raise ValueError if *value* is not in [0, 1]."""
+    if not math.isfinite(value) or value < 0.0 or value > 1.0:
+        raise ValueError(f"{name} must be in [0, 1]")
+
+
+def _require_positive_probability(value, name):
+    """Raise ValueError if *value* is not in (0, 1]."""
+    if not math.isfinite(value) or value <= 0.0 or value > 1.0:
+        raise ValueError(f"{name} must be in (0, 1]")
+
+
 def _validated_prop(parent_prop, validator, param_name, doc=None):
     """Create a property that validates before delegating to a nanobind property setter."""
 
@@ -384,18 +402,261 @@ class StudentT(_core.StudentT):
         super().fit(data)
 
 
+class LogNormal(_core.LogNormal):
+    """Log-normal distribution LogN(mu, sigma).
+
+    Parameters
+    ----------
+    mu : float
+        Location parameter \u03bc (log-mean, any finite value, default 0).
+    sigma : float
+        Scale parameter \u03c3 (log-stddev, must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *mu* is not finite or *sigma* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, mu=0.0, sigma=1.0):
+        _require_finite(mu, "Location parameter (mu)")
+        _require_positive_finite(sigma, "Scale parameter (sigma)")
+        super().__init__(mu=mu, sigma=sigma)
+
+    mu = _validated_prop(_core.LogNormal.mu, _require_finite,
+                         "Location parameter (mu)", "Location parameter \u03bc (log-mean).")
+    sigma = _validated_prop(_core.LogNormal.sigma, _require_positive_finite,
+                            "Scale parameter (sigma)", "Scale parameter \u03c3 (log-stddev).")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
+
+class Pareto(_core.Pareto):
+    """Pareto distribution Pareto(scale, alpha).
+
+    Parameters
+    ----------
+    scale : float
+        Minimum value x_m (must be positive, default 1).
+    alpha : float
+        Shape/tail parameter \u03b1 (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *scale* or *alpha* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, scale=1.0, alpha=1.0):
+        _require_positive_finite(scale, "Scale parameter (scale)")
+        _require_positive_finite(alpha, "Shape parameter (alpha)")
+        super().__init__(scale=scale, alpha=alpha)
+
+    scale = _validated_prop(_core.Pareto.scale, _require_positive_finite,
+                            "Scale parameter (scale)", "Minimum value x_m.")
+    alpha = _validated_prop(_core.Pareto.alpha, _require_positive_finite,
+                            "Shape parameter (alpha)", "Shape parameter \u03b1 (tail index).")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
+
+class Weibull(_core.Weibull):
+    """Weibull distribution W(shape, scale).
+
+    Parameters
+    ----------
+    shape : float
+        Shape parameter k (must be positive, default 1).
+    scale : float
+        Scale parameter \u03bb (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *shape* or *scale* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, shape=1.0, scale=1.0):
+        _require_positive_finite(shape, "Shape parameter (shape)")
+        _require_positive_finite(scale, "Scale parameter (scale)")
+        super().__init__(shape=shape, scale=scale)
+
+    shape = _validated_prop(_core.Weibull.shape, _require_positive_finite,
+                            "Shape parameter (shape)", "Shape parameter k.")
+    scale = _validated_prop(_core.Weibull.scale, _require_positive_finite,
+                            "Scale parameter (scale)", "Scale parameter \u03bb.")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
+
+class Rayleigh(_core.Rayleigh):
+    """Rayleigh distribution R(sigma).
+
+    Parameters
+    ----------
+    sigma : float
+        Scale parameter \u03c3 (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *sigma* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, sigma=1.0):
+        _require_positive_finite(sigma, "Scale parameter (sigma)")
+        super().__init__(sigma=sigma)
+
+    sigma = _validated_prop(_core.Rayleigh.sigma, _require_positive_finite,
+                            "Scale parameter (sigma)", "Scale parameter \u03c3.")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
+
+class VonMises(_core.VonMises):
+    """Von Mises distribution VM(mu, kappa).
+
+    Parameters
+    ----------
+    mu : float
+        Mean direction \u03bc (any finite real; stored wrapped to (-\u03c0, \u03c0], default 0).
+    kappa : float
+        Concentration parameter \u03ba (\u2265 0; 0 = uniform circular, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *mu* is not finite or *kappa* is negative or not finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, mu=0.0, kappa=1.0):
+        _require_finite(mu, "Mean direction (mu)")
+        _require_non_negative_finite(kappa, "Concentration (kappa)")
+        super().__init__(mu=mu, kappa=kappa)
+
+    mu = _validated_prop(_core.VonMises.mu, _require_finite,
+                         "Mean direction (mu)", "Mean direction \u03bc (wrapped to (-\u03c0, \u03c0]).")
+    kappa = _validated_prop(_core.VonMises.kappa, _require_non_negative_finite,
+                            "Concentration (kappa)", "Concentration \u03ba (\u2265 0).")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
+
+class Binomial(_core.Binomial):
+    """Binomial distribution B(n, p).
+
+    Parameters
+    ----------
+    n : int
+        Number of trials (must be a positive integer, default 10).
+    p : float
+        Success probability (must be in [0, 1], default 0.5).
+
+    Raises
+    ------
+    ValueError
+        If *n* is not a positive integer or *p* is not in [0, 1].
+    """
+
+    __slots__ = ()
+
+    def __init__(self, n=10, p=0.5):
+        if not isinstance(n, int) or n <= 0:
+            raise ValueError("n must be a positive integer")
+        _require_probability(p, "Probability (p)")
+        super().__init__(n=n, p=p)
+
+    @property
+    def n(self):
+        """Number of trials n (positive integer)."""
+        return _core.Binomial.n.__get__(self)
+
+    @n.setter
+    def n(self, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("n must be a positive integer")
+        _core.Binomial.n.__set__(self, value)
+
+    p = _validated_prop(_core.Binomial.p, _require_probability,
+                        "Probability (p)", "Success probability p (in [0, 1]).")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
+
+class NegativeBinomial(_core.NegativeBinomial):
+    """Negative Binomial distribution NB(r, p).
+
+    Parameters
+    ----------
+    r : float
+        Number of successes (real-valued, must be positive, default 1).
+    p : float
+        Success probability (must be in (0, 1], default 0.5).
+
+    Raises
+    ------
+    ValueError
+        If *r* is not positive and finite, or *p* is not in (0, 1].
+    """
+
+    __slots__ = ()
+
+    def __init__(self, r=1.0, p=0.5):
+        _require_positive_finite(r, "Success count (r)")
+        _require_positive_probability(p, "Probability (p)")
+        super().__init__(r=r, p=p)
+
+    r = _validated_prop(_core.NegativeBinomial.r, _require_positive_finite,
+                        "Success count (r)", "Number of successes r (positive, real-valued).")
+    p = _validated_prop(_core.NegativeBinomial.p, _require_positive_probability,
+                        "Probability (p)", "Success probability p (in (0, 1]).")
+
+    def fit(self, data):
+        _validate_fit_data(data)
+        super().fit(data)
+
+
 # SciPy-familiar alias
 Normal = Gaussian
 
 __all__ = [
     "Beta",
+    "Binomial",
     "ChiSquared",
     "DiscreteUniform",
     "Exponential",
     "Gamma",
     "Gaussian",
+    "LogNormal",
+    "NegativeBinomial",
     "Normal",
+    "Pareto",
     "Poisson",
+    "Rayleigh",
     "StudentT",
     "Uniform",
+    "VonMises",
+    "Weibull",
 ]

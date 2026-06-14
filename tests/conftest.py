@@ -61,6 +61,48 @@ def student_t():
 
 
 @pytest.fixture
+def lognormal():
+    """Log-normal distribution LogN(0, 1)."""
+    return pylibstats.LogNormal(0.0, 1.0)
+
+
+@pytest.fixture
+def pareto():
+    """Pareto distribution Pareto(scale=1, alpha=2)."""
+    return pylibstats.Pareto(1.0, 2.0)
+
+
+@pytest.fixture
+def weibull():
+    """Weibull distribution W(shape=2, scale=1)."""
+    return pylibstats.Weibull(2.0, 1.0)
+
+
+@pytest.fixture
+def rayleigh():
+    """Rayleigh distribution R(sigma=1)."""
+    return pylibstats.Rayleigh(1.0)
+
+
+@pytest.fixture
+def von_mises():
+    """Von Mises distribution VM(mu=0, kappa=1)."""
+    return pylibstats.VonMises(0.0, 1.0)
+
+
+@pytest.fixture
+def binomial():
+    """Binomial distribution B(n=10, p=0.5)."""
+    return pylibstats.Binomial(10, 0.5)
+
+
+@pytest.fixture
+def negative_binomial():
+    """Negative Binomial distribution NB(r=2, p=0.5)."""
+    return pylibstats.NegativeBinomial(2.0, 0.5)
+
+
+@pytest.fixture
 def rng():
     """Deterministic NumPy random generator for reproducible test data."""
     return np.random.default_rng(seed=42)
