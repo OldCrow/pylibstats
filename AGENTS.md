@@ -25,7 +25,7 @@ Core goals:
 ## Dependency notes
 
 - Build first tries `find_package(libstats)`.
-- If not found, CMake fetches `libstats` from GitHub tag `v1.2.0`.
+- If not found, CMake fetches `libstats` from GitHub tag `v1.5.0`.
 - For local development against a custom `libstats` install, pass `libstats_DIR` (do not override `CMAKE_PREFIX_PATH`, which can break nanobind discovery).
 
 ## Session Start Baseline Workflow (Required)
@@ -66,6 +66,8 @@ python -m pytest tests -q
 
 ### macOS Catalina (10.15)
 
+> **Deprecation:** macOS Catalina (10.15) support is deprecated as of `libstats` v1.5.0 and will be removed in v2.0.0, which will require macOS 13 Ventura. `pylibstats` follows the same support window. v0.2.1 (pinning libstats v1.5.0) is the last release validated on Catalina/Ivy Bridge.
+
 - `pylibstats` has no separate Catalina bootstrap script.
 - When the build uses local or fetched `libstats` sources, apply Catalina caveats from `../libstats/docs/BUILD_SYSTEM_GUIDE.md` (notably Homebrew LLVM 22 behavior on Catalina).
 - Treat architecture verification as mandatory before comparing performance/test outcomes.
@@ -73,7 +75,7 @@ python -m pytest tests -q
 ### Linux
 
 - Requires GCC ≥ 12 or Clang ≥ 14 for C++20 support.
-- If `libstats` is not found locally, CMake fetches it automatically at v1.2.0.
+- If `libstats` is not found locally, CMake fetches it automatically at v1.5.0.
 
 ```bash
 python -m pip install -e ".[test]" -Ccmake.build-type=Release
