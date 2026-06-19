@@ -20,6 +20,12 @@ class TestDiscreteUniformConstruction:
         with pytest.raises(ValueError):
             pylibstats.DiscreteUniform(6, 1)  # a > b
 
+    def test_equal_bounds_raises_python_level(self):
+        # S-1: a == b must be caught with a clear Python message before
+        # reaching C++, which would produce a cryptic error.
+        with pytest.raises(ValueError, match="strictly greater"):
+            pylibstats.DiscreteUniform(5, 5)
+
 
 class TestDiscreteUniformScalar:
     def test_pmf_equal(self, discrete_uniform):

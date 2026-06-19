@@ -32,6 +32,20 @@ class TestBinomialConstruction:
         with pytest.raises((ValueError, TypeError)):
             pylibstats.Binomial(10.5, 0.5)  # type: ignore[arg-type]
 
+    def test_numpy_int64_accepted(self):
+        # S-2: np.int64 (and other NumPy integer scalars) must be accepted.
+        import numpy as np
+        n = np.int64(20)
+        d = pylibstats.Binomial(n, 0.4)
+        assert d.n == 20
+
+    def test_numpy_int_setter_accepted(self):
+        # S-2: n setter must accept NumPy integer scalars.
+        import numpy as np
+        d = pylibstats.Binomial(10, 0.5)
+        d.n = np.int32(15)
+        assert d.n == 15
+
     def test_p_above_one_raises(self):
         with pytest.raises(ValueError):
             pylibstats.Binomial(10, 1.1)
