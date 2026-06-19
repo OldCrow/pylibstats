@@ -31,11 +31,20 @@ def _require_positive_finite(value, name):
 
 
 def _validate_fit_data(data):
-    """Raise ValueError if *data* is empty or contains non-finite values."""
-    if len(data) == 0:
+    """Convert *data* to float64, then raise ValueError if empty or non-finite.
+
+    Accepts any array-like including generators; always returns a 1-D
+    float64 ndarray so callers can pass it directly to the C++ binding.
+    """
+    # np.asarray cannot consume generators; materialise them to a list first.
+    if not isinstance(data, (np.ndarray, list, tuple)):
+        data = list(data)
+    arr = np.asarray(data, dtype=np.float64)
+    if arr.size == 0:
         raise ValueError("fit() requires at least one data point")
-    if not np.all(np.isfinite(data)):
+    if not np.all(np.isfinite(arr)):
         raise ValueError("fit() data must contain only finite values")
+    return arr
 
 
 def _require_non_negative_finite(value, name):
@@ -104,8 +113,7 @@ class Gaussian(_core.Gaussian):
                             "Standard deviation", "Standard deviation parameter σ.")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class Exponential(_core.Exponential):
@@ -132,8 +140,7 @@ class Exponential(_core.Exponential):
                           "Lambda (rate parameter)", "Rate parameter λ.")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class Uniform(_core.Uniform):
@@ -192,8 +199,7 @@ class Uniform(_core.Uniform):
         _core.Uniform.b.__set__(self, value)
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class Poisson(_core.Poisson):
@@ -220,8 +226,7 @@ class Poisson(_core.Poisson):
                           "Lambda (rate parameter)", "Rate parameter λ.")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class DiscreteUniform(_core.DiscreteUniform):
@@ -232,20 +237,20 @@ class DiscreteUniform(_core.DiscreteUniform):
     a : int
         Lower bound (default 0).
     b : int
-        Upper bound (must be >= *a*, default 1).
+        Upper bound (must be strictly greater than *a*, default 1).
 
     Raises
     ------
     ValueError
-        If *a* > *b*.
+        If *a* >= *b*.
     """
 
     __slots__ = ()
 
     def __init__(self, a=0, b=1):
-        if a > b:
+        if a >= b:
             raise ValueError(
-                "Upper bound (b) must be greater than or equal to lower bound (a)"
+                "Upper bound (b) must be strictly greater than lower bound (a)"
             )
         super().__init__(a=a, b=b)
 
@@ -256,9 +261,9 @@ class DiscreteUniform(_core.DiscreteUniform):
 
     @a.setter
     def a(self, value):
-        if value > self.b:
+        if value >= self.b:
             raise ValueError(
-                "Lower bound (a) must be less than or equal to upper bound (b)"
+                "Lower bound (a) must be strictly less than upper bound (b)"
             )
         _core.DiscreteUniform.a.__set__(self, value)
 
@@ -269,15 +274,14 @@ class DiscreteUniform(_core.DiscreteUniform):
 
     @b.setter
     def b(self, value):
-        if value < self.a:
+        if value <= self.a:
             raise ValueError(
-                "Upper bound (b) must be greater than or equal to lower bound (a)"
+                "Upper bound (b) must be strictly greater than lower bound (a)"
             )
         _core.DiscreteUniform.b.__set__(self, value)
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class Gamma(_core.Gamma):
@@ -309,8 +313,7 @@ class Gamma(_core.Gamma):
                            "Beta (rate parameter)", "Rate parameter β.")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class Beta(_core.Beta):
@@ -342,8 +345,7 @@ class Beta(_core.Beta):
                            "Beta (shape parameter)", "Shape parameter β.")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class ChiSquared(_core.ChiSquared):
@@ -370,8 +372,7 @@ class ChiSquared(_core.ChiSquared):
                         "Degrees of freedom (k)", "Degrees of freedom k.")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class StudentT(_core.StudentT):
@@ -398,8 +399,7 @@ class StudentT(_core.StudentT):
                          "Degrees of freedom (nu)", "Degrees of freedom ν.")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class LogNormal(_core.LogNormal):
@@ -431,8 +431,7 @@ class LogNormal(_core.LogNormal):
                             "Scale parameter (sigma)", "Scale parameter \u03c3 (log-stddev).")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class Pareto(_core.Pareto):
@@ -464,8 +463,7 @@ class Pareto(_core.Pareto):
                             "Shape parameter (alpha)", "Shape parameter \u03b1 (tail index).")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class Weibull(_core.Weibull):
@@ -497,8 +495,7 @@ class Weibull(_core.Weibull):
                             "Scale parameter (scale)", "Scale parameter \u03bb.")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class Rayleigh(_core.Rayleigh):
@@ -525,8 +522,7 @@ class Rayleigh(_core.Rayleigh):
                             "Scale parameter (sigma)", "Scale parameter \u03c3.")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class VonMises(_core.VonMises):
@@ -558,8 +554,7 @@ class VonMises(_core.VonMises):
                             "Concentration (kappa)", "Concentration \u03ba (\u2265 0).")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class Binomial(_core.Binomial):
@@ -581,10 +576,10 @@ class Binomial(_core.Binomial):
     __slots__ = ()
 
     def __init__(self, n=10, p=0.5):
-        if not isinstance(n, int) or n <= 0:
+        if not isinstance(n, (int, np.integer)) or n <= 0:
             raise ValueError("n must be a positive integer")
         _require_probability(p, "Probability (p)")
-        super().__init__(n=n, p=p)
+        super().__init__(n=int(n), p=p)
 
     @property
     def n(self):
@@ -593,16 +588,15 @@ class Binomial(_core.Binomial):
 
     @n.setter
     def n(self, value):
-        if not isinstance(value, int) or value <= 0:
+        if not isinstance(value, (int, np.integer)) or value <= 0:
             raise ValueError("n must be a positive integer")
-        _core.Binomial.n.__set__(self, value)
+        _core.Binomial.n.__set__(self, int(value))
 
     p = _validated_prop(_core.Binomial.p, _require_probability,
                         "Probability (p)", "Success probability p (in [0, 1]).")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 class NegativeBinomial(_core.NegativeBinomial):
@@ -634,8 +628,7 @@ class NegativeBinomial(_core.NegativeBinomial):
                         "Probability (p)", "Success probability p (in (0, 1]).")
 
     def fit(self, data):
-        _validate_fit_data(data)
-        super().fit(data)
+        super().fit(_validate_fit_data(data))
 
 
 # SciPy-familiar alias

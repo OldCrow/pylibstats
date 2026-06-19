@@ -177,6 +177,19 @@ class TestFitValidation:
         g.fit(np.array([1.0, 2.0, 3.0, 4.0, 5.0]))
         assert g.mu == pytest.approx(3.0)
 
+    def test_generator_raises_value_error_not_type_error(self):
+        # S-4: a generator has no len(); _validate_fit_data must convert via
+        # np.asarray first, otherwise TypeError leaks instead of ValueError.
+        g = pylibstats.Gaussian()
+        with pytest.raises(ValueError, match="at least one"):
+            g.fit(x for x in [])  # empty generator
+
+    def test_generator_with_data_accepted(self):
+        # S-4: non-empty generator should work (np.asarray materialises it).
+        g = pylibstats.Gaussian()
+        g.fit(x for x in [1.0, 2.0, 3.0, 4.0, 5.0])
+        assert g.mu == pytest.approx(3.0)
+
     def test_fit_validation_all_distributions(self):
         """Verify every distribution rejects empty data."""
         dists = [
