@@ -8,11 +8,14 @@
 // libstats distribution headers
 #include <libstats/distributions/beta.h>
 #include <libstats/distributions/binomial.h>
+#include <libstats/distributions/cauchy.h>
 #include <libstats/distributions/chi_squared.h>
 #include <libstats/distributions/discrete.h>
 #include <libstats/distributions/exponential.h>
 #include <libstats/distributions/gamma.h>
 #include <libstats/distributions/gaussian.h>
+#include <libstats/distributions/geometric.h>
+#include <libstats/distributions/laplace.h>
 #include <libstats/distributions/lognormal.h>
 #include <libstats/distributions/negative_binomial.h>
 #include <libstats/distributions/pareto.h>
@@ -36,9 +39,9 @@ template <typename Dist, typename... Args>
 void checked_init(Dist* self, Args... args) {
     auto result = Dist::create(args...);
     if (result.isError()) {
-        throw nb::value_error(result.message.c_str());
+        throw nb::value_error(result.message().c_str());
     }
-    new (self) Dist(std::move(result.value));
+    new (self) Dist(std::move(result).unwrap());
 }
 
 // ===========================================================================
@@ -344,4 +347,60 @@ NB_MODULE(_core, m) {
             [](NegativeBinomialDistribution& d, double v) { d.setP(v); },
             "Success probability p (in (0, 1]).");
     bind_common_methods<NegativeBinomialDistribution>(neg_binomial);
+
+    // -----------------------------------------------------------------------
+    // Geometric
+    // -----------------------------------------------------------------------
+    auto geometric = nb::class_<GeometricDistribution>(m, "Geometric",
+        "Geometric distribution Geo(p). Models failures before first success.")
+        .def("__init__",
+             [](GeometricDistribution* self, double p) {
+                 checked_init(self, p);
+             },
+             nb::arg("p") = 0.5)
+        .def_prop_rw("p",
+            [](const GeometricDistribution& d) { return d.getP(); },
+            [](GeometricDistribution& d, double v) { d.setP(v); },
+            "Success probability p (in (0, 1]).");
+    bind_common_methods<GeometricDistribution>(geometric);
+
+    // -----------------------------------------------------------------------
+    // Laplace
+    // -----------------------------------------------------------------------
+    auto laplace = nb::class_<LaplaceDistribution>(m, "Laplace",
+        "Laplace (double-exponential) distribution Laplace(mu, b).")
+        .def("__init__",
+             [](LaplaceDistribution* self, double mu, double b) {
+                 checked_init(self, mu, b);
+             },
+             nb::arg("mu") = 0.0, nb::arg("b") = 1.0)
+        .def_prop_rw("mu",
+            [](const LaplaceDistribution& d) { return d.getMu(); },
+            [](LaplaceDistribution& d, double v) { d.setMu(v); },
+            "Location parameter \u03bc (any finite value).")
+        .def_prop_rw("b",
+            [](const LaplaceDistribution& d) { return d.getB(); },
+            [](LaplaceDistribution& d, double v) { d.setB(v); },
+            "Scale parameter b (must be positive).");
+    bind_common_methods<LaplaceDistribution>(laplace);
+
+    // -----------------------------------------------------------------------
+    // Cauchy
+    // -----------------------------------------------------------------------
+    auto cauchy = nb::class_<CauchyDistribution>(m, "Cauchy",
+        "Cauchy distribution Cauchy(x0, gamma). Mean/variance/skewness/kurtosis are NaN.")
+        .def("__init__",
+             [](CauchyDistribution* self, double x0, double gamma) {
+                 checked_init(self, x0, gamma);
+             },
+             nb::arg("x0") = 0.0, nb::arg("gamma") = 1.0)
+        .def_prop_rw("x0",
+            [](const CauchyDistribution& d) { return d.getX0(); },
+            [](CauchyDistribution& d, double v) { d.setX0(v); },
+            "Location parameter x\u2080 (any finite value).")
+        .def_prop_rw("gamma",
+            [](const CauchyDistribution& d) { return d.getGamma(); },
+            [](CauchyDistribution& d, double v) { d.setGamma(v); },
+            "Scale parameter \u03b3 (must be positive).");
+    bind_common_methods<CauchyDistribution>(cauchy);
 }

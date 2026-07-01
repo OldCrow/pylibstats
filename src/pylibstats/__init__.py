@@ -631,17 +631,116 @@ class NegativeBinomial(_core.NegativeBinomial):
         super().fit(_validate_fit_data(data))
 
 
+class Geometric(_core.Geometric):
+    """Geometric distribution Geo(p).
+
+    Models the number of failures before the first success in a sequence of
+    independent Bernoulli trials.
+
+    Parameters
+    ----------
+    p : float
+        Success probability (must be in (0, 1], default 0.5).
+
+    Raises
+    ------
+    ValueError
+        If *p* is not in (0, 1].
+    """
+
+    __slots__ = ()
+
+    def __init__(self, p=0.5):
+        _require_positive_probability(p, "Probability (p)")
+        super().__init__(p=p)
+
+    p = _validated_prop(_core.Geometric.p, _require_positive_probability,
+                        "Probability (p)", "Success probability p (in (0, 1]).")
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
+class Laplace(_core.Laplace):
+    """Laplace (double-exponential) distribution Laplace(mu, b).
+
+    Parameters
+    ----------
+    mu : float
+        Location parameter \u03bc (any finite value, default 0).
+    b : float
+        Scale parameter b (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *mu* is not finite or *b* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, mu=0.0, b=1.0):
+        _require_finite(mu, "Location parameter (mu)")
+        _require_positive_finite(b, "Scale parameter (b)")
+        super().__init__(mu=mu, b=b)
+
+    mu = _validated_prop(_core.Laplace.mu, _require_finite,
+                         "Location parameter (mu)", "Location parameter \u03bc.")
+    b = _validated_prop(_core.Laplace.b, _require_positive_finite,
+                        "Scale parameter (b)", "Scale parameter b.")
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
+class Cauchy(_core.Cauchy):
+    """Cauchy distribution Cauchy(x0, gamma).
+
+    Mean, variance, skewness, and kurtosis are undefined (NaN).
+
+    Parameters
+    ----------
+    x0 : float
+        Location parameter (any finite value, default 0).
+    gamma : float
+        Scale parameter \u03b3 (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *x0* is not finite or *gamma* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, x0=0.0, gamma=1.0):
+        _require_finite(x0, "Location parameter (x0)")
+        _require_positive_finite(gamma, "Scale parameter (gamma)")
+        super().__init__(x0=x0, gamma=gamma)
+
+    x0 = _validated_prop(_core.Cauchy.x0, _require_finite,
+                         "Location parameter (x0)", "Location parameter x\u2080.")
+    gamma = _validated_prop(_core.Cauchy.gamma, _require_positive_finite,
+                            "Scale parameter (gamma)", "Scale parameter \u03b3.")
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
 # SciPy-familiar alias
 Normal = Gaussian
 
 __all__ = [
     "Beta",
     "Binomial",
+    "Cauchy",
     "ChiSquared",
     "DiscreteUniform",
     "Exponential",
     "Gamma",
     "Gaussian",
+    "Geometric",
+    "Laplace",
     "LogNormal",
     "NegativeBinomial",
     "Normal",

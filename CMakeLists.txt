@@ -27,7 +27,7 @@ find_package(nanobind CONFIG REQUIRED)
 # ---------------------------------------------------------------------------
 # libstats — prefer installed package, fall back to FetchContent
 # ---------------------------------------------------------------------------
-find_package(libstats 1.5.3.1 QUIET)
+find_package(libstats 2.0.0 QUIET)
 
 if(NOT libstats_FOUND)
     message(STATUS "libstats not found via find_package — using FetchContent")
@@ -35,7 +35,7 @@ if(NOT libstats_FOUND)
     FetchContent_Declare(
         libstats
         GIT_REPOSITORY https://github.com/OldCrow/libstats.git
-        GIT_TAG        v1.5.3_1
+        GIT_TAG        v2.0.0
     )
     # Disable libstats tests/tools/examples when building as a subdirectory.
     set(LIBSTATS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -46,11 +46,11 @@ if(NOT libstats_FOUND)
     set(LIBSTATS_TARGET libstats_static)
 else()
     message(STATUS "Using installed libstats ${LIBSTATS_VERSION}")
-    # Installed exports use libstats::libstats_static (not libstats::static)
-    if(TARGET libstats::libstats_static)
-        set(LIBSTATS_TARGET libstats::libstats_static)
-    elseif(TARGET libstats::static)
+    # v2.0.0 install target is libstats::static; libstats::libstats_static kept as fallback.
+    if(TARGET libstats::static)
         set(LIBSTATS_TARGET libstats::static)
+    elseif(TARGET libstats::libstats_static)
+        set(LIBSTATS_TARGET libstats::libstats_static)
     elseif(DEFINED LIBSTATS_LIBRARIES)
         set(LIBSTATS_TARGET ${LIBSTATS_LIBRARIES})
     else()

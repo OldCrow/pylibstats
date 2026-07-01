@@ -196,16 +196,51 @@ class NegativeBinomial(_core.NegativeBinomial):
     @p.setter
     def p(self, value: float) -> None: ...
 
+class Geometric(_core.Geometric):
+    """Geometric distribution Geo(p)."""
+    def __init__(self, p: float = 0.5) -> None: ...
+    @property
+    def p(self) -> float: ...
+    @p.setter
+    def p(self, value: float) -> None: ...
+
+class Laplace(_core.Laplace):
+    """Laplace distribution Laplace(mu, b)."""
+    def __init__(self, mu: float = 0.0, b: float = 1.0) -> None: ...
+    @property
+    def mu(self) -> float: ...
+    @mu.setter
+    def mu(self, value: float) -> None: ...
+    @property
+    def b(self) -> float: ...
+    @b.setter
+    def b(self, value: float) -> None: ...
+
+class Cauchy(_core.Cauchy):
+    """Cauchy distribution Cauchy(x0, gamma). Mean/variance/skewness/kurtosis are NaN."""
+    def __init__(self, x0: float = 0.0, gamma: float = 1.0) -> None: ...
+    @property
+    def x0(self) -> float: ...
+    @x0.setter
+    def x0(self, value: float) -> None: ...
+    @property
+    def gamma(self) -> float: ...
+    @gamma.setter
+    def gamma(self, value: float) -> None: ...
+
 Normal = Gaussian
 
 __all__ = [
     "Beta",
     "Binomial",
+    "Cauchy",
     "ChiSquared",
     "DiscreteUniform",
     "Exponential",
     "Gamma",
     "Gaussian",
+    "Geometric",
+    "Laplace",
     "LogNormal",
     "NegativeBinomial",
     "Normal",

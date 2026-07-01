@@ -150,6 +150,76 @@ class TestStudentTSetterValidation:
             t.nu = -5.0
 
 
+class TestGeometricSetterValidation:
+    def test_p_rejects_zero(self):
+        g = pylibstats.Geometric()
+        with pytest.raises(ValueError):
+            g.p = 0.0
+
+    def test_p_rejects_negative(self):
+        g = pylibstats.Geometric()
+        with pytest.raises(ValueError):
+            g.p = -0.1
+
+    def test_p_rejects_greater_than_one(self):
+        g = pylibstats.Geometric()
+        with pytest.raises(ValueError):
+            g.p = 1.5
+
+    def test_valid_setter_applies(self):
+        g = pylibstats.Geometric()
+        g.p = 0.7
+        assert g.p == pytest.approx(0.7)
+
+
+class TestLaplaceSetterValidation:
+    def test_b_rejects_zero(self):
+        lap = pylibstats.Laplace()
+        with pytest.raises(ValueError):
+            lap.b = 0.0
+
+    def test_b_rejects_negative(self):
+        lap = pylibstats.Laplace()
+        with pytest.raises(ValueError):
+            lap.b = -1.0
+
+    def test_mu_rejects_inf(self):
+        lap = pylibstats.Laplace()
+        with pytest.raises(ValueError):
+            lap.mu = math.inf
+
+    def test_valid_setters_apply(self):
+        lap = pylibstats.Laplace()
+        lap.mu = 3.0
+        lap.b = 2.0
+        assert lap.mu == pytest.approx(3.0)
+        assert lap.b == pytest.approx(2.0)
+
+
+class TestCauchySetterValidation:
+    def test_gamma_rejects_zero(self):
+        c = pylibstats.Cauchy()
+        with pytest.raises(ValueError):
+            c.gamma = 0.0
+
+    def test_gamma_rejects_negative(self):
+        c = pylibstats.Cauchy()
+        with pytest.raises(ValueError):
+            c.gamma = -0.5
+
+    def test_x0_rejects_nan(self):
+        c = pylibstats.Cauchy()
+        with pytest.raises(ValueError):
+            c.x0 = float("nan")
+
+    def test_valid_setters_apply(self):
+        c = pylibstats.Cauchy()
+        c.x0 = 1.0
+        c.gamma = 0.5
+        assert c.x0 == pytest.approx(1.0)
+        assert c.gamma == pytest.approx(0.5)
+
+
 # ---------------------------------------------------------------------------
 # fit() input validation
 # ---------------------------------------------------------------------------
@@ -202,6 +272,9 @@ class TestFitValidation:
             pylibstats.Beta(),
             pylibstats.ChiSquared(),
             pylibstats.StudentT(),
+            pylibstats.Geometric(),
+            pylibstats.Laplace(),
+            pylibstats.Cauchy(),
         ]
         empty = np.array([])
         for dist in dists:

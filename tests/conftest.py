@@ -103,6 +103,24 @@ def negative_binomial():
 
 
 @pytest.fixture
+def geometric():
+    """Geometric distribution Geo(p=0.3)."""
+    return pylibstats.Geometric(0.3)
+
+
+@pytest.fixture
+def laplace():
+    """Laplace distribution Laplace(mu=0, b=1)."""
+    return pylibstats.Laplace(0.0, 1.0)
+
+
+@pytest.fixture
+def cauchy():
+    """Cauchy distribution Cauchy(x0=0, gamma=1)."""
+    return pylibstats.Cauchy(0.0, 1.0)
+
+
+@pytest.fixture
 def rng():
     """Deterministic NumPy random generator for reproducible test data."""
     return np.random.default_rng(seed=42)

@@ -24,8 +24,8 @@ Core goals:
 
 ## Dependency notes
 
-- Build first tries `find_package(libstats)`.
-- If not found, CMake fetches `libstats` from GitHub tag `v1.5.3_1`.
+- Build first tries `find_package(libstats 2.0.0)`.
+- If not found, CMake fetches `libstats` from GitHub tag `v2.0.0`.
 - For local development against a custom `libstats` install, pass `libstats_DIR` (do not override `CMAKE_PREFIX_PATH`, which can break nanobind discovery).
 
 ## Session Start Baseline Workflow (Required)
@@ -54,7 +54,9 @@ python -c "import platform, struct; print(platform.system(), platform.machine(),
 
 ## Platform-specific build requirements
 
-### macOS (non-Catalina)
+**Minimum macOS:** 13 Ventura (AppleClang 15 / Xcode 15). macOS Catalina (10.15) is not supported from `pylibstats` v0.3.0 / `libstats` v2.0.0 onwards.
+
+### macOS
 
 - Use the active Python environment for install/test.
 - If linking to local `libstats`, ensure that `libstats` was built for the same machine architecture (`arm64` vs `x86_64`).
@@ -64,18 +66,10 @@ python -m pip install -e ".[test]" -Ccmake.build-type=Release
 python -m pytest tests -q
 ```
 
-### macOS Catalina (10.15)
-
-> **Deprecation:** macOS Catalina (10.15) support is deprecated as of `libstats` v1.5.x and will be removed in v2.0.0, which will require macOS 13 Ventura. `pylibstats` follows the same support window. v0.2.x (pinning libstats v1.5.x) is the last series validated on Catalina/Ivy Bridge.
-
-- `pylibstats` has no separate Catalina bootstrap script.
-- When the build uses local or fetched `libstats` sources, apply Catalina caveats from `../libstats/docs/BUILD_SYSTEM_GUIDE.md` (notably Homebrew LLVM 22 behavior on Catalina).
-- Treat architecture verification as mandatory before comparing performance/test outcomes.
-
 ### Linux
 
-- Requires GCC ≥ 12 or Clang ≥ 14 for C++20 support.
-- If `libstats` is not found locally, CMake fetches it automatically at v1.5.3_1.
+- Requires GCC ≥ 13 or Clang ≥ 17 for C++20 support.
+- If `libstats` is not found locally, CMake fetches it automatically at v2.0.0.
 
 ```bash
 python -m pip install -e ".[test]" -Ccmake.build-type=Release

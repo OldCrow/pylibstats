@@ -116,12 +116,10 @@ void bind_common_methods(PyClass& cls) {
             "Fit distribution parameters to data via maximum likelihood estimation.");
 
     // -- Sampling -------------------------------------------------------------
-    // NOTE: libstats distributions take std::mt19937& (not a template parameter).
-    // Upgrading to mt19937_64 requires a libstats API change planned for v2.0.0.
-    // For now, use a thread_local mt19937 for unseeded calls so that two rapid
-    // unseeded calls on the same thread advance the same engine state rather than
-    // each seeding independently from random_device (which can return the same
-    // value within the same clock tick, producing correlated samples).
+    // Uses a thread_local mt19937 for unseeded calls so that two rapid unseeded
+    // calls on the same thread advance the same engine state rather than each
+    // seeding independently from random_device (which can return the same value
+    // within the same clock tick, producing correlated samples).
     cls.def("sample",
             [](const Dist& d, size_t n, nb::object seed) -> nb::object {
                 if (seed.is_none()) {
