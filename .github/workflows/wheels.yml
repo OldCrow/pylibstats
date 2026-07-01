@@ -45,8 +45,8 @@ jobs:
         env:
           # macOS: build universal2 (x86_64 + arm64)
           CIBW_ARCHS_MACOS: "x86_64 arm64"
-          # nanobind uses aligned deallocation, which requires macOS 10.13+
-          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=10.13"
+          # libstats v2.0.0 requires macOS 13 Ventura minimum
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=13.0"
           # Linux: set per-matrix (x86_64 on x64 runner, aarch64 on native ARM runner)
           CIBW_ARCHS_LINUX: ${{ matrix.cibw_archs_linux }}
           # Windows: x86_64 only
