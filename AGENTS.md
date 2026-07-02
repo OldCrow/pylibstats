@@ -25,7 +25,7 @@ Core goals:
 ## Dependency notes
 
 - Build first tries `find_package(libstats 2.0.0)`.
-- If not found, CMake fetches `libstats` from GitHub tag `v2.0.0`.
+- If not found, CMake fetches `libstats` from GitHub tag `v2.0.1`.
 - For local development against a custom `libstats` install, pass `libstats_DIR` (do not override `CMAKE_PREFIX_PATH`, which can break nanobind discovery).
 
 ## Session Start Baseline Workflow (Required)
@@ -69,7 +69,7 @@ python -m pytest tests -q
 ### Linux
 
 - Requires GCC ≥ 13 or Clang ≥ 17 for C++20 support.
-- If `libstats` is not found locally, CMake fetches it automatically at v2.0.0.
+- If `libstats` is not found locally, CMake fetches it automatically at v2.0.1.
 
 ```bash
 python -m pip install -e ".[test]" -Ccmake.build-type=Release
