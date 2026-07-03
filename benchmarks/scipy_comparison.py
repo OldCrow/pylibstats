@@ -3,9 +3,11 @@
 
 Usage
 -----
-    python benchmarks/scipy_comparison.py            # full suite
-    python benchmarks/scipy_comparison.py --quick    # N ≤ 100k, fewer reps
-    python benchmarks/scipy_comparison.py --fit      # include MLE fitting section
+    python benchmarks/scipy_comparison.py                        # full suite
+    python benchmarks/scipy_comparison.py --quick                # N ≤ 100k, fewer reps
+    python benchmarks/scipy_comparison.py --sizes 1000,100000    # custom batch sizes
+    python benchmarks/scipy_comparison.py --fit                  # include MLE fitting
+    python benchmarks/scipy_comparison.py --sizes 1000000        # bandwidth cliff probe
 
 Covers 16 distributions across the pylibstats / scipy.stats shared API.
 Not included in this first cut:
@@ -43,9 +45,8 @@ import pylibstats as pls
 BATCH_SIZES_FULL  = [1_000, 10_000, 100_000, 1_000_000]
 BATCH_SIZES_QUICK = [1_000, 10_000, 100_000]
 
-# Reps per batch size: enough for a stable median, scaled down for large N.
-# dict maps N → number of timed repetitions
-REPS: dict[int, int] = {
+# Default reps per batch size.  _default_reps() handles arbitrary N.
+REPS_DEFAULT: dict[int, int] = {
     1_000:     200,
     10_000:     60,
     100_000:    20,
@@ -53,6 +54,17 @@ REPS: dict[int, int] = {
 }
 WARMUP_REPS = 3   # discarded before timing begins
 ACC_N       = 50_000  # batch size for accuracy measurements
+
+
+def _default_reps(n: int) -> int:
+    """Return a sensible rep count for any batch size."""
+    if n in REPS_DEFAULT:
+        return REPS_DEFAULT[n]
+    if n <= 1_000:       return 200
+    if n <= 10_000:      return 60
+    if n <= 100_000:     return 20
+    if n <= 1_000_000:   return 8
+    return 3
 
 
 # ---------------------------------------------------------------------------
@@ -235,6 +247,18 @@ def _throughput(n: int, t: float) -> float:
     return n / t if t > 0 else float("inf")
 
 
+def _fmt_throughput(n: int, t: float) -> str:
+    """Format pylibstats throughput compactly: 123k, 456M, 1.2G."""
+    eps = _throughput(n, t)
+    if eps >= 1e9:
+        return f"{eps/1e9:.1f}G"
+    if eps >= 1e6:
+        return f"{eps/1e6:.0f}M"
+    if eps >= 1e3:
+        return f"{eps/1e3:.0f}k"
+    return f"{eps:.0f}"
+
+
 # ---------------------------------------------------------------------------
 # Throughput benchmark
 # ---------------------------------------------------------------------------
@@ -270,7 +294,7 @@ def run_throughput(specs: list[DistSpec], sizes: list[int]) -> dict:
 
             for n in sizes:
                 x = spec.make_x(n)
-                reps = REPS.get(n, 5)
+                reps = _default_reps(n)
 
                 pls_t = _time_op(lambda: pls_fn(x), reps)
                 sc_t  = _time_op(lambda: sc_fn(x), reps)
@@ -280,24 +304,38 @@ def run_throughput(specs: list[DistSpec], sizes: list[int]) -> dict:
 
 
 def print_throughput_table(results: dict, sizes: list[int]) -> None:
+    """Print speedup ratios and pylibstats absolute throughput side by side.
+
+    Each cell shows:  ratio×  throughput
+    e.g.  6.4×  800M  means 6.4× faster than scipy at 800 Melements/s.
+    """
     dist_names = list(results.keys())
     ops        = list(results[dist_names[0]].keys())
 
+    # Cell width: "  6.4×  800M" = 12 chars
+    COL = 12
+
     for op in ops:
         print(f"\n── {op} ──")
-        header = f"{'Distribution':<16}" + "".join(
-            f"  {_fmt_n(n):>9}" for n in sizes
+        # Two-row header: sizes on top, unit labels below
+        header1 = f"{'Distribution':<16}" + "".join(
+            f"  {_fmt_n(n):>{COL-2}}" for n in sizes
         )
-        print(header)
-        print("─" * len(header))
+        header2 = f"{'':16}" + "".join(
+            f"  {'×  pls/s':>{COL-2}}" for _ in sizes
+        )
+        print(header1)
+        print(header2)
+        print("─" * len(header1))
         for name in dist_names:
             row = f"{name:<16}"
             for n in sizes:
                 pls_t, sc_t = results[name][op][n]
                 ratio = sc_t / pls_t if pls_t > 0 else float("inf")
-                row += f"  {ratio:>8.1f}x"
+                tput  = _fmt_throughput(n, pls_t)
+                row += f"  {ratio:4.1f}×  {tput:>4}"
             print(row)
-        print("(>1× = pylibstats faster; <1× = scipy faster)")
+        print("  (>1× = pylibstats faster  |  pls/s = pylibstats elements/second)")
 
 
 def _fmt_n(n: int) -> str:
@@ -508,19 +546,37 @@ def main() -> None:
         help="Limit to N ≤ 100k and reduce repetitions for a fast smoke-test",
     )
     parser.add_argument(
+        "--sizes",
+        metavar="N[,N,...]",
+        default=None,
+        help="Comma-separated batch sizes to benchmark, e.g. 1000,100000,1000000. "
+             "Overrides --quick. Rep counts are chosen automatically per N.",
+    )
+    parser.add_argument(
         "--fit", action="store_true",
         help="Include MLE fitting timing section (adds ~30-60s)",
     )
     args = parser.parse_args()
 
-    sizes = BATCH_SIZES_QUICK if args.quick else BATCH_SIZES_FULL
+    if args.sizes:
+        try:
+            sizes = [int(s.strip()) for s in args.sizes.split(",")]
+            if not sizes:
+                parser.error("--sizes requires at least one value")
+        except ValueError:
+            parser.error("--sizes values must be integers, e.g. 1000,100000,1000000")
+    elif args.quick:
+        sizes = BATCH_SIZES_QUICK
+    else:
+        sizes = BATCH_SIZES_FULL
 
     print_header()
 
     # ── Throughput ──────────────────────────────────────────────────────────
-    print("Throughput (speedup ratio: pylibstats / scipy)")
-    print(f"Median of {WARMUP_REPS} warmup + timed reps per cell; "
-          f"reported as scipy_time / pylibstats_time")
+    print("Throughput  (ratio = scipy_time / pylibstats_time;  "
+          "pls/s = pylibstats elements per second)")
+    print(f"Median of {WARMUP_REPS} warmup + timed reps; "
+          f"rep counts: {', '.join(f'{_fmt_n(n)}={_default_reps(n)}' for n in sizes)}")
     print()
 
     results = run_throughput(DISTRIBUTIONS, sizes)
