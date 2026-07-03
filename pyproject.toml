@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pylibstats"
-version = "0.3.1"
+version = "0.3.2"
 description = "Python bindings for libstats — SIMD-accelerated statistical distributions via NumPy"
 readme = "README.md"
 license = { text = "MIT" }
