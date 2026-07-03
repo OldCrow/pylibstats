@@ -306,36 +306,50 @@ def run_throughput(specs: list[DistSpec], sizes: list[int]) -> dict:
 def print_throughput_table(results: dict, sizes: list[int]) -> None:
     """Print speedup ratios and pylibstats absolute throughput side by side.
 
-    Each cell shows:  ratio×  throughput
-    e.g.  6.4×  800M  means 6.4× faster than scipy at 800 Melements/s.
+    Layout constants
+    ----------------
+    RATIO_W = 5   "17.0×"  (f"{r:4.1f}×")
+    INNER   = 2   intra-super-column gap between × and pls/s
+    TPUT_W  = 5   " 800M"  (right-justified in 5; fits "pls/s" as label)
+    CELL_W  = 12  = RATIO_W + INNER + TPUT_W  (one super-column width)
+    OUTER   = 4   inter-super-column gap (2× the inner gap)
+
+    All three rows — N= header, ×/pls/s sub-header, data — are CELL_W+OUTER
+    chars wide per super-column, so the separator is always exact.
     """
     dist_names = list(results.keys())
     ops        = list(results[dist_names[0]].keys())
 
-    # Cell width: "  6.4×  800M" = 12 chars
-    COL = 12
+    RATIO_W = 5
+    INNER   = 2
+    TPUT_W  = 5
+    CELL_W  = RATIO_W + INNER + TPUT_W   # 12
+    OUTER   = 4
+    outer_s = " " * OUTER
 
     for op in ops:
         print(f"\n── {op} ──")
-        # Two-row header: sizes on top, unit labels below
-        header1 = f"{'Distribution':<16}" + "".join(
-            f"  {_fmt_n(n):>{COL-2}}" for n in sizes
+        # Row 1: N= labels, each centred over its CELL_W super-column
+        h1 = f"{'Distribution':<16}" + "".join(
+            f"{outer_s}{_fmt_n(n):^{CELL_W}}" for n in sizes
         )
-        header2 = f"{'':16}" + "".join(
-            f"  {'×  pls/s':>{COL-2}}" for _ in sizes
+        # Row 2: sub-column labels; × right-justified in RATIO_W, pls/s right in TPUT_W
+        h2 = f"{'':16}" + "".join(
+            f"{outer_s}{'×':>{RATIO_W}}  {'pls/s':>{TPUT_W}}" for _ in sizes
         )
-        print(header1)
-        print(header2)
-        print("─" * len(header1))
+        sep = "─" * len(h1)
+        print(h1)
+        print(h2)
+        print(sep)
         for name in dist_names:
             row = f"{name:<16}"
             for n in sizes:
                 pls_t, sc_t = results[name][op][n]
                 ratio = sc_t / pls_t if pls_t > 0 else float("inf")
                 tput  = _fmt_throughput(n, pls_t)
-                row += f"  {ratio:4.1f}×  {tput:>4}"
+                row += f"{outer_s}{ratio:4.1f}×  {tput:>{TPUT_W}}"
             print(row)
-        print("  (>1× = pylibstats faster  |  pls/s = pylibstats elements/second)")
+        print("  (>1× = pylibstats faster; pls/s = absolute pylibstats throughput)")
 
 
 def _fmt_n(n: int) -> str:
