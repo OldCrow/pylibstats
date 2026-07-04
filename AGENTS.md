@@ -24,8 +24,8 @@ Core goals:
 
 ## Dependency notes
 
-- Build first tries `find_package(libstats 2.0.0)`.
-- If not found, CMake fetches `libstats` from GitHub tag `v2.0.1`.
+- Build first tries `find_package(libstats 2.0.3)`.
+- If not found, CMake fetches `libstats` from GitHub tag `v2.0.3`.
 - For local development against a custom `libstats` install, pass `libstats_DIR` (do not override `CMAKE_PREFIX_PATH`, which can break nanobind discovery).
 
 ## Session Start Baseline Workflow (Required)

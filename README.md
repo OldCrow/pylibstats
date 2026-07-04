@@ -4,7 +4,7 @@ Python bindings for [libstats](https://github.com/OldCrow/libstats) — a C++20 
 
 ## Features
 
-- **9 distributions**: Gaussian, Exponential, Uniform, Poisson, Discrete Uniform, Gamma, Beta, Chi-Squared, Student's t
+- **19 distributions**: Gaussian, Exponential, Uniform, Poisson, Discrete Uniform, Gamma, Chi-Squared, Log-Normal, Student's t, Beta, Weibull, Rayleigh, Pareto, Von Mises, Binomial, Negative Binomial, Geometric, Laplace, Cauchy
 - **NumPy integration**: pass arrays directly to `pdf()`, `cdf()`, `log_pdf()` — the SIMD/parallel batch path runs automatically
 - **GIL-releasing**: batch operations release the Python GIL for concurrent workloads
 - **SciPy-compatible naming**: `pdf`, `cdf`, `ppf`, `fit`, `sample`
@@ -42,7 +42,7 @@ Requires Python ≥3.11, CMake ≥3.20, and a C++20 compiler.
 pip install .
 ```
 
-This fetches libstats v1.5.3_1 via CMake FetchContent if not already installed.
+This fetches libstats v2.0.3 via CMake FetchContent if not already installed.
 
 ### Building against a local libstats
 
