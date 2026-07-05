@@ -6,6 +6,7 @@
 #include <nanobind/stl/vector.h>
 
 #include <cmath>
+#include <cstdint>
 #include <random>
 #include <span>
 #include <vector>
@@ -105,12 +106,31 @@ void bind_common_methods(PyClass& cls) {
                 return buf_to_numpy(buf, n);
             },
             nb::arg("x").noconvert(),
-            "Batch CDF: accepts a 1-D float64 NumPy array.");
+            "Batch CDF: accepts a 1-D float64 NumPy array.")
+
+       .def("ppf",
+            [](const Dist& d, NpArrayIn p) -> nb::object {
+                const size_t n = p.shape(0);
+                auto* buf = new double[n];
+                {
+                    nb::gil_scoped_release release;
+                    const double* values = p.data();
+                    for (size_t i = 0; i < n; ++i) {
+                        buf[i] = d.getQuantile(values[i]);
+                    }
+                }
+                return buf_to_numpy(buf, n);
+            },
+            nb::arg("p").noconvert(),
+            "Batch PPF/quantile: accepts a 1-D float64 NumPy array.");
 
     // -- Fitting --------------------------------------------------------------
     cls.def("fit", [](Dist& d, NpArrayIn data) {
                 std::vector<double> vec(data.data(), data.data() + data.shape(0));
-                d.fit(vec);
+                {
+                    nb::gil_scoped_release release;
+                    d.fit(vec);
+                }
             },
             nb::arg("data"),
             "Fit distribution parameters to data via maximum likelihood estimation.");
@@ -125,11 +145,23 @@ void bind_common_methods(PyClass& cls) {
                 if (seed.is_none()) {
                     // Thread-local engine seeded once per thread at first use.
                     static thread_local std::mt19937 tls_rng{std::random_device{}()};
-                    auto samples = d.sample(tls_rng, n);
+                    std::vector<double> samples;
+                    {
+                        nb::gil_scoped_release release;
+                        samples = d.sample(tls_rng, n);
+                    }
                     return vec_to_numpy(std::move(samples));
                 } else {
-                    std::mt19937 rng{nb::cast<unsigned int>(seed)};
-                    auto samples = d.sample(rng, n);
+                    const auto raw_seed = nb::cast<std::uint64_t>(seed);
+                    std::seed_seq seed_seq{
+                        static_cast<std::uint32_t>(raw_seed),
+                        static_cast<std::uint32_t>(raw_seed >> 32)};
+                    std::mt19937 rng{seed_seq};
+                    std::vector<double> samples;
+                    {
+                        nb::gil_scoped_release release;
+                        samples = d.sample(rng, n);
+                    }
                     return vec_to_numpy(std::move(samples));
                 }
             },

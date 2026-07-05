@@ -88,9 +88,9 @@ See the `examples/` directory:
 
 ### macOS ABI note
 
-On macOS, libstats may be compiled with Homebrew LLVM while Python extensions use Apple clang. These ship different `libc++` versions whose exception-handling ABIs are incompatible — C++ exceptions thrown from libstats segfault during stack unwinding instead of propagating normally.
+From v2.0.0, libstats only supports the system AppleClang toolchain on macOS — the alternate Homebrew LLVM path was removed. Both libstats and pylibstats are therefore always compiled with the same `libc++`, so the v1.x ABI incompatibility (mismatched exception-handling ABIs causing segfaults) no longer applies.
 
-pylibstats works around this by validating all parameters in pure Python (in `__init__.py`) *before* calling into the C++ layer, so the error path never crosses the ABI boundary. If you add new parameters or distribution classes, follow the same pattern: validate in Python, then delegate to `_core`.
+Pylibstats still validates all parameters in pure Python (in `__init__.py`) before calling into the C++ layer. This is retained as good practice and to produce cleaner Python error messages, but it is no longer a safety requirement.
 
 See `libstats/include/core/error_handling.h` for the upstream discussion.
 

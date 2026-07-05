@@ -104,12 +104,16 @@ class TestDiscreteUniformSetterValidation:
         with pytest.raises(ValueError):
             d.b = 0
 
-    def test_equal_bounds_rejected(self):
-        # libstats v1.2.0: equal bounds (a == b) are now invalid (a >= b fails).
+    def test_equal_bounds_allowed(self):
+        # libstats v2.0.1: equal bounds (a == b) are a valid degenerate
+        # distribution with a single outcome (H = log(1) = 0).
         d = pylibstats.DiscreteUniform(1, 6)
-        d.a = 3  # valid: a=3, b=6
-        with pytest.raises(ValueError):
-            d.b = 3  # a == b is now invalid
+        d.b = 1  # a == b == 1: valid degenerate
+        assert d.a == d.b == 1
+
+    def test_constructor_equal_bounds_allowed(self):
+        d = pylibstats.DiscreteUniform(3, 3)
+        assert d.a == d.b == 3
 
 
 class TestGammaSetterValidation:

@@ -20,11 +20,16 @@ class TestDiscreteUniformConstruction:
         with pytest.raises(ValueError):
             pylibstats.DiscreteUniform(6, 1)  # a > b
 
-    def test_equal_bounds_raises_python_level(self):
-        # S-1: a == b must be caught with a clear Python message before
-        # reaching C++, which would produce a cryptic error.
-        with pytest.raises(ValueError, match="strictly greater"):
-            pylibstats.DiscreteUniform(5, 5)
+    def test_equal_bounds_allowed(self):
+        # libstats v2.0.1+: a == b is a valid degenerate distribution with
+        # one outcome, probability 1 at that outcome, and CDF 1 at/above it.
+        dist = pylibstats.DiscreteUniform(5, 5)
+        assert dist.a == 5
+        assert dist.b == 5
+        assert dist.pdf(5.0) == pytest.approx(1.0)
+        assert dist.pdf(4.0) == pytest.approx(0.0)
+        assert dist.cdf(4.0) == pytest.approx(0.0)
+        assert dist.cdf(5.0) == pytest.approx(1.0)
 
 
 class TestDiscreteUniformScalar:

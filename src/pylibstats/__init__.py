@@ -30,6 +30,43 @@ def _require_positive_finite(value, name):
         raise ValueError(f"{name} must be a positive finite number")
 
 
+def _coerce_batch_input(x):
+    """Normalize input for pdf / log_pdf / cdf.
+
+    Scalars (int, float, 0-d array, NumPy scalar) become Python float so that
+    nanobind dispatches to the scalar C++ overload.  Array-like inputs (lists,
+    int arrays, strided views) are converted to a C-contiguous float64 ndarray
+    so they reach the batch C++ overload.  This matches the behaviour of
+    ``fit()``, which also accepts any array-like via ``_validate_fit_data``.
+    """
+    if isinstance(x, np.ndarray):
+        if x.ndim == 0:
+            return float(x)
+        return np.ascontiguousarray(x, dtype=np.float64)
+    if isinstance(x, (int, float, np.generic)):
+        return float(x)
+    # list, tuple, or other sequence
+    arr = np.asarray(x, dtype=np.float64)
+    if arr.ndim == 0:
+        return float(arr)
+    return np.ascontiguousarray(arr)
+
+def _coerce_probability_input(p):
+    """Normalize and validate ppf probability input.
+
+    Accepts the same scalar/array-like inputs as ``_coerce_batch_input`` but
+    rejects NaN, infinity, and probabilities outside [0, 1] before the C++
+    quantile implementation is called.
+    """
+    value = _coerce_batch_input(p)
+    if isinstance(value, np.ndarray):
+        if not np.all(np.isfinite(value)) or np.any(value < 0.0) or np.any(value > 1.0):
+            raise ValueError("Probability (p) must contain only finite values in [0, 1]")
+        return value
+    _require_probability(value, "Probability (p)")
+    return value
+
+
 def _validate_fit_data(data):
     """Convert *data* to float64, then raise ValueError if empty or non-finite.
 
@@ -237,20 +274,21 @@ class DiscreteUniform(_core.DiscreteUniform):
     a : int
         Lower bound (default 0).
     b : int
-        Upper bound (must be strictly greater than *a*, default 1).
+        Upper bound (must be >= *a*; a == b is a valid degenerate distribution
+        with a single outcome, default 1).
 
     Raises
     ------
     ValueError
-        If *a* >= *b*.
+        If *a* > *b*.
     """
 
     __slots__ = ()
 
     def __init__(self, a=0, b=1):
-        if a >= b:
+        if a > b:
             raise ValueError(
-                "Upper bound (b) must be strictly greater than lower bound (a)"
+                "Upper bound (b) must be >= lower bound (a)"
             )
         super().__init__(a=a, b=b)
 
@@ -261,9 +299,9 @@ class DiscreteUniform(_core.DiscreteUniform):
 
     @a.setter
     def a(self, value):
-        if value >= self.b:
+        if value > self.b:
             raise ValueError(
-                "Lower bound (a) must be strictly less than upper bound (b)"
+                "Lower bound (a) must be <= upper bound (b)"
             )
         _core.DiscreteUniform.a.__set__(self, value)
 
@@ -274,9 +312,9 @@ class DiscreteUniform(_core.DiscreteUniform):
 
     @b.setter
     def b(self, value):
-        if value <= self.a:
+        if value < self.a:
             raise ValueError(
-                "Upper bound (b) must be strictly greater than lower bound (a)"
+                "Upper bound (b) must be >= lower bound (a)"
             )
         _core.DiscreteUniform.b.__set__(self, value)
 
@@ -729,6 +767,59 @@ class Cauchy(_core.Cauchy):
 
 # SciPy-familiar alias
 Normal = Gaussian
+
+
+# ---------------------------------------------------------------------------
+# P2/P3 fix: coerce pdf / log_pdf / cdf / ppf inputs across all distribution classes.
+#
+# The C++ batch overload requires a C-contiguous float64 NDArray; nanobind
+# rejects int arrays, lists, and strided views with TypeError.  By contrast,
+# fit() already accepts any array-like via _validate_fit_data.  The patch
+# below makes pdf / log_pdf / cdf / ppf equally permissive: scalars are
+# normalised to Python float (scalar C++ overload); everything else is coerced
+# to a C-contiguous float64 ndarray (batch C++ overload).
+# ---------------------------------------------------------------------------
+
+def _install_batch_coercion(cls, core_cls):
+    """Inject pdf / log_pdf / cdf / ppf coercion wrappers into *cls*."""
+    for _name in ('pdf', 'log_pdf', 'cdf', 'ppf'):
+        _m = getattr(core_cls, _name)
+
+        def _make(m, method_name):
+            def _wrapper(self, x):
+                if method_name == 'ppf':
+                    return m(self, _coerce_probability_input(x))
+                return m(self, _coerce_batch_input(x))
+            _wrapper.__name__ = method_name
+            _wrapper.__qualname__ = f'{cls.__qualname__}.{method_name}'
+            return _wrapper
+
+        setattr(cls, _name, _make(_m, _name))
+
+
+for _dist_cls, _core_cls in [
+    (Gaussian, _core.Gaussian),
+    (Exponential, _core.Exponential),
+    (Uniform, _core.Uniform),
+    (Poisson, _core.Poisson),
+    (DiscreteUniform, _core.DiscreteUniform),
+    (Gamma, _core.Gamma),
+    (Beta, _core.Beta),
+    (ChiSquared, _core.ChiSquared),
+    (StudentT, _core.StudentT),
+    (LogNormal, _core.LogNormal),
+    (Pareto, _core.Pareto),
+    (Weibull, _core.Weibull),
+    (Rayleigh, _core.Rayleigh),
+    (VonMises, _core.VonMises),
+    (Binomial, _core.Binomial),
+    (NegativeBinomial, _core.NegativeBinomial),
+    (Geometric, _core.Geometric),
+    (Laplace, _core.Laplace),
+    (Cauchy, _core.Cauchy),
+]:
+    _install_batch_coercion(_dist_cls, _core_cls)
+del _dist_cls, _core_cls
 
 __all__ = [
     "Beta",
