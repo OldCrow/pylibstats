@@ -92,8 +92,6 @@ From v2.0.0, libstats only supports the system AppleClang toolchain on macOS —
 
 Pylibstats still validates all parameters in pure Python (in `__init__.py`) before calling into the C++ layer. This is retained as good practice and to produce cleaner Python error messages, but it is no longer a safety requirement.
 
-See `libstats/include/core/error_handling.h` for the upstream discussion.
-
 ## License
 
 MIT

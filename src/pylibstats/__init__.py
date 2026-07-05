@@ -13,9 +13,10 @@ from . import _core
 # ---------------------------------------------------------------------------
 # Parameter validation helpers
 # ---------------------------------------------------------------------------
-# Validation is done in Python to avoid C++ exception-handling segfaults
-# caused by libc++ ABI incompatibilities on macOS (Homebrew LLVM vs Apple
-# clang).  See libstats core/error_handling.h for background.
+# Validation in Python produces clean ValueError messages, keeps input
+# coercion in one place, and avoids surfacing C++ exception wording to
+# users.  The v1.x ABI safety motivation (Homebrew LLVM vs Apple clang)
+# was removed in v2.0; this layer is now retained purely for UX consistency.
 # ---------------------------------------------------------------------------
 
 def _require_finite(value, name):
