@@ -154,3 +154,27 @@ class TestSampleSeed:
         high_seed = (1 << 40) + low_seed
         # Old binding cast to unsigned int, making these seeds identical.
         assert not np.array_equal(g.sample(8, seed=low_seed), g.sample(8, seed=high_seed))
+
+
+class TestPpfValidation:
+    @pytest.mark.parametrize("p", [-0.1, 1.1, np.nan, np.inf, -np.inf])
+    def test_scalar_invalid_probability_raises_value_error(self, g, p):
+        with pytest.raises(ValueError, match="Probability"):
+            g.ppf(p)
+
+    @pytest.mark.parametrize("p", [
+        [-0.1, 0.5],
+        [0.5, 1.1],
+        [0.25, np.nan],
+        np.array([0.25, np.inf]),
+        np.array([0.25, -np.inf]),
+    ])
+    def test_batch_invalid_probability_raises_value_error(self, g, p):
+        with pytest.raises(ValueError, match="Probability"):
+            g.ppf(p)
+
+    def test_batch_valid_probability_bounds(self, g):
+        result = g.ppf([0.0, 0.5, 1.0])
+        assert result[0] == -np.inf
+        assert result[1] == pytest.approx(0.0, abs=1e-12)
+        assert result[2] == np.inf

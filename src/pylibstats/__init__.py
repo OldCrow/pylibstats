@@ -51,6 +51,21 @@ def _coerce_batch_input(x):
         return float(arr)
     return np.ascontiguousarray(arr)
 
+def _coerce_probability_input(p):
+    """Normalize and validate ppf probability input.
+
+    Accepts the same scalar/array-like inputs as ``_coerce_batch_input`` but
+    rejects NaN, infinity, and probabilities outside [0, 1] before the C++
+    quantile implementation is called.
+    """
+    value = _coerce_batch_input(p)
+    if isinstance(value, np.ndarray):
+        if not np.all(np.isfinite(value)) or np.any(value < 0.0) or np.any(value > 1.0):
+            raise ValueError("Probability (p) must contain only finite values in [0, 1]")
+        return value
+    _require_probability(value, "Probability (p)")
+    return value
+
 
 def _validate_fit_data(data):
     """Convert *data* to float64, then raise ValueError if empty or non-finite.
@@ -772,6 +787,8 @@ def _install_batch_coercion(cls, core_cls):
 
         def _make(m, method_name):
             def _wrapper(self, x):
+                if method_name == 'ppf':
+                    return m(self, _coerce_probability_input(x))
                 return m(self, _coerce_batch_input(x))
             _wrapper.__name__ = method_name
             _wrapper.__qualname__ = f'{cls.__qualname__}.{method_name}'
