@@ -39,6 +39,9 @@ class TestScalarCoercion:
     def test_zero_dim_array_pdf(self, g):
         assert g.pdf(np.array(1.0)) == pytest.approx(g.pdf(1.0))
 
+    def test_int_scalar_ppf(self, g):
+        assert g.ppf(0) == pytest.approx(g.ppf(0.0))
+
 
 # ---------------------------------------------------------------------------
 # Batch array coercion
@@ -59,6 +62,11 @@ class TestBatchIntArray:
         x_int = np.array([-1, 0, 1], dtype=np.int32)
         x_flt = x_int.astype(np.float64)
         np.testing.assert_allclose(g.cdf(x_int), g.cdf(x_flt))
+
+    def test_int32_array_ppf(self, g):
+        p_int = np.array([0, 1], dtype=np.int32)
+        p_flt = p_int.astype(np.float64)
+        np.testing.assert_allclose(g.ppf(p_int), g.ppf(p_flt))
 
 
 class TestBatchListInput:
@@ -82,6 +90,11 @@ class TestBatchListInput:
         x_arr = np.array(x_list, dtype=np.float64)
         np.testing.assert_allclose(g.pdf(x_list), g.pdf(x_arr))
 
+    def test_list_ppf(self, g):
+        p_list = [0.25, 0.5, 0.75]
+        p_arr = np.array(p_list, dtype=np.float64)
+        np.testing.assert_allclose(g.ppf(p_list), g.ppf(p_arr))
+
 
 class TestBatchStridedArray:
     def test_strided_pdf(self, g):
@@ -98,6 +111,13 @@ class TestBatchStridedArray:
         assert not x_strided.flags['C_CONTIGUOUS'] or x_strided.strides[0] != x_strided.itemsize
         x_contig = np.ascontiguousarray(x_strided)
         np.testing.assert_allclose(g.cdf(x_strided), g.cdf(x_contig))
+
+    def test_strided_ppf(self, g):
+        p_full = np.linspace(0.1, 0.9, 20)
+        p_strided = p_full[::3]
+        assert not p_strided.flags['C_CONTIGUOUS'] or p_strided.strides[0] != p_strided.itemsize
+        p_contig = np.ascontiguousarray(p_strided)
+        np.testing.assert_allclose(g.ppf(p_strided), g.ppf(p_contig))
 
 
 # ---------------------------------------------------------------------------
@@ -120,3 +140,17 @@ class TestAllDistributionsIntArray:
         x_flt = x.astype(np.float64)
         np.testing.assert_allclose(dist.pdf(x), dist.pdf(x_flt))
         np.testing.assert_allclose(dist.cdf(x), dist.cdf(x_flt))
+
+
+class TestSampleSeed:
+    def test_large_seed_is_deterministic(self):
+        g = pylibstats.Gaussian()
+        seed = (1 << 40) + 123
+        np.testing.assert_allclose(g.sample(8, seed=seed), g.sample(8, seed=seed))
+
+    def test_large_seed_uses_high_bits(self):
+        g = pylibstats.Gaussian()
+        low_seed = 123
+        high_seed = (1 << 40) + low_seed
+        # Old binding cast to unsigned int, making these seeds identical.
+        assert not np.array_equal(g.sample(8, seed=low_seed), g.sample(8, seed=high_seed))

@@ -755,19 +755,19 @@ Normal = Gaussian
 
 
 # ---------------------------------------------------------------------------
-# P2 fix: coerce pdf / log_pdf / cdf inputs across all distribution classes.
+# P2/P3 fix: coerce pdf / log_pdf / cdf / ppf inputs across all distribution classes.
 #
 # The C++ batch overload requires a C-contiguous float64 NDArray; nanobind
 # rejects int arrays, lists, and strided views with TypeError.  By contrast,
 # fit() already accepts any array-like via _validate_fit_data.  The patch
-# below makes pdf / log_pdf / cdf equally permissive: scalars are normalised
-# to Python float (scalar C++ overload); everything else is coerced to a
-# C-contiguous float64 ndarray (batch C++ overload).
+# below makes pdf / log_pdf / cdf / ppf equally permissive: scalars are
+# normalised to Python float (scalar C++ overload); everything else is coerced
+# to a C-contiguous float64 ndarray (batch C++ overload).
 # ---------------------------------------------------------------------------
 
 def _install_batch_coercion(cls, core_cls):
-    """Inject pdf / log_pdf / cdf coercion wrappers into *cls*."""
-    for _name in ('pdf', 'log_pdf', 'cdf'):
+    """Inject pdf / log_pdf / cdf / ppf coercion wrappers into *cls*."""
+    for _name in ('pdf', 'log_pdf', 'cdf', 'ppf'):
         _m = getattr(core_cls, _name)
 
         def _make(m, method_name):

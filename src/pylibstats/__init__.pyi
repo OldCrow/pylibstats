@@ -16,7 +16,7 @@ from pylibstats import _core
 # ---------------------------------------------------------------------------
 # Each class below also exposes:
 #   pdf, log_pdf, cdf   — scalar (float) and batch (NDArray) overloads
-#   ppf                 — scalar only
+#   ppf                 — scalar and batch overloads
 #   fit                 — NDArray input
 #   sample              — returns NDArray
 #   mean, variance, std, skewness, kurtosis  — read-only float properties
