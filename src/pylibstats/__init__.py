@@ -9,7 +9,6 @@ import numpy as np
 
 from . import _core
 
-
 # ---------------------------------------------------------------------------
 # Parameter validation helpers
 # ---------------------------------------------------------------------------
@@ -588,7 +587,8 @@ class VonMises(_core.VonMises):
         super().__init__(mu=mu, kappa=kappa)
 
     mu = _validated_prop(_core.VonMises.mu, _require_finite,
-                         "Mean direction (mu)", "Mean direction \u03bc (wrapped to (-\u03c0, \u03c0]).")
+                         "Mean direction (mu)",
+                         "Mean direction \u03bc (wrapped to (-\u03c0, \u03c0]).")
     kappa = _validated_prop(_core.VonMises.kappa, _require_non_negative_finite,
                             "Concentration (kappa)", "Concentration \u03ba (\u2265 0).")
 

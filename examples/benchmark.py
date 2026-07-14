@@ -134,5 +134,5 @@ if __name__ == "__main__":
     import scipy
     print("pylibstats vs SciPy batch performance benchmark")
     print(f"NumPy {np.__version__}, SciPy {scipy.__version__}")
-    print(f"Repeats: 5 (median), Warmup: 2")
+    print("Repeats: 5 (median), Warmup: 2")
     run_benchmarks()

@@ -8,6 +8,7 @@ Usage:
     python examples/scipy_comparison.py
 """
 
+import math as _math
 import sys
 
 import numpy as np
@@ -139,7 +140,6 @@ for p in [0.025, 0.5, 0.975]:
 
 # ── Log-Normal ─────────────────────────────────────────────────────────────
 heading("LogNormal(mu=0, sigma=1)")
-import math as _math
 pl = pylibstats.LogNormal(mu=0.0, sigma=1.0)
 sc = sp.lognorm(s=1.0, scale=_math.exp(0.0))  # s=sigma, scale=exp(mu)
 

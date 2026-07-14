@@ -1,6 +1,5 @@
 """Basic pylibstats usage examples."""
 
-import math
 
 import numpy as np
 
@@ -78,7 +77,7 @@ for name, dist in [
 # ── Sampling ─────────────────────────────────────────────────────────────────
 
 samples = gaussian.sample(n=10_000, seed=42)
-print(f"\n── Sampling ──")
+print("\n── Sampling ──")
 print(f"  10,000 Gaussian samples: mean={samples.mean():.4f}, std={samples.std():.4f}")
 
 beta_samples = beta.sample(n=10_000, seed=42)
@@ -90,13 +89,13 @@ print(f"  10,000 Beta(2,5) samples: mean={beta_samples.mean():.4f}, "
 data = np.random.default_rng(42).normal(loc=5.0, scale=2.0, size=5000)
 fitted = pylibstats.Gaussian()
 fitted.fit(data)
-print(f"\n── Fitting ──")
-print(f"  Fitted Gaussian to 5,000 samples from N(5, 2):")
+print("\n── Fitting ──")
+print("  Fitted Gaussian to 5,000 samples from N(5, 2):")
 print(f"  mu={fitted.mu:.4f}  sigma={fitted.sigma:.4f}")
 
 # ── Parameter modification ───────────────────────────────────────────────────
 
-print(f"\n── Parameter modification ──")
+print("\n── Parameter modification ──")
 dist = pylibstats.Exponential(lam=1.0)
 print(f"  Before: lam={dist.lam}, mean={dist.mean:.4f}")
 dist.lam = 3.0

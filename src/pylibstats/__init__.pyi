@@ -4,10 +4,7 @@ All distribution classes validate parameters in Python before delegating
 to the native C++ extension.  Invalid parameters raise ``ValueError``.
 """
 
-from typing import overload
 
-import numpy as np
-from numpy.typing import NDArray
 
 from pylibstats import _core
 
