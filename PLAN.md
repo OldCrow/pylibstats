@@ -66,7 +66,10 @@ Last reconciled against live GitHub state: 2026-07-14.
 - None currently exist in this repository (checked 2026-07-14).
 
 ## GitHub Issues Without Milestone [DERIVED]
-- Open issues: none as of 2026-07-14.
+- Open issues (filed 2026-07-14, from this session's Known Gaps/Next Steps):
+  - #5 Wire ruff check and lint-cpp.sh into CI
+  - #6 Decide whether to adopt mypy for the Python surface
+  - #7 Run deferred ruff format pass across src/pylibstats, tests, examples
 - Closed issues: 1 as of 2026-07-14.
 
 ## In Progress [OPEN]
@@ -79,13 +82,12 @@ Last reconciled against live GitHub state: 2026-07-14.
 ## Known Gaps [OPEN]
 - mypy is not adopted for the Python surface — not evaluated this
   session (ruff covers lint/format; typing strictness is a separate,
-  undecided question).
+  undecided question). Tracked as issue #6.
 - Neither `ruff check` nor `scripts/lint-cpp.sh` are wired into CI yet
-  (`ci.yml`, `wheels.yml` only build and test).
+  (`ci.yml`, `wheels.yml` only build and test). Tracked as issue #5.
 - `ruff format` would reformat 16 files under the new config — not
   applied in this pass since it's a large, purely cosmetic diff that
-  deserves its own visible change. Run
-  `ruff format src/pylibstats tests examples` as a deliberate follow-up.
+  deserves its own visible change. Tracked as issue #7.
 
 ## Cross-Repo Dependencies [OPEN]
 Depends on libstats via `find_package` (preferred) or `FetchContent`
@@ -96,7 +98,10 @@ current release before assuming this repo's pin is still current on any
 future session.
 
 ## Next Steps
-- Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
-- Run the deferred `ruff format` pass as its own reviewable change.
-- Decide whether to adopt mypy.
-- Consider pruning or reviving the two stale local branches.
+- #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
+- #7: Run the deferred `ruff format` pass as its own reviewable change.
+- #6: Decide whether to adopt mypy.
+- Prune or revive the two stale local branches (`bench/issue-2-scipy-comparison`,
+  `fix/audit-v1.5.2`) — not filed as a GitHub issue since both branches'
+  remote counterparts are already gone (`origin` shows `: gone` for both);
+  this is local-only housekeeping, not collaborator-facing.
