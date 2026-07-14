@@ -73,11 +73,7 @@ Last reconciled against live GitHub state: 2026-07-14.
 - Closed issues: 1 as of 2026-07-14.
 
 ## In Progress [OPEN]
-- (none currently tracked — populate as work starts). Two old local
-  branches exist (`bench/issue-2-scipy-comparison`, last commit
-  2026-07-02; `fix/audit-v1.5.2`, last commit 2026-06-19, predates the
-  v2.0 libstats pin) but both are stale relative to `main`'s current tip
-  and show no signs of active work — not treated as in-progress.
+- (none currently tracked — populate as work starts).
 
 ## Known Gaps [OPEN]
 - mypy is not adopted for the Python surface — not evaluated this
@@ -101,7 +97,14 @@ future session.
 - #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
 - #7: Run the deferred `ruff format` pass as its own reviewable change.
 - #6: Decide whether to adopt mypy.
-- Prune or revive the two stale local branches (`bench/issue-2-scipy-comparison`,
-  `fix/audit-v1.5.2`) — not filed as a GitHub issue since both branches'
-  remote counterparts are already gone (`origin` shows `: gone` for both);
-  this is local-only housekeeping, not collaborator-facing.
+
+## Local Branch Cleanup (2026-07-14) [DERIVED]
+The two stale local branches (`bench/issue-2-scipy-comparison`,
+`fix/audit-v1.5.2`) were confirmed via GitHub PR history to be
+squash-merged already — PR #3 (merged 2026-07-04) and PR #1 (merged
+2026-06-19) respectively. Squash merges diverge from the source
+branch's commit hash, so `git branch --merged main` didn't recognize
+them and they survived local cleanup after their remote counterparts
+were deleted post-merge. Deleted locally with `git branch -D`; no
+GitHub issue filed since this was local-only housekeeping with no
+collaborator-facing artifact.
