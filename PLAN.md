@@ -87,11 +87,11 @@ Last reconciled against live GitHub state: 2026-07-14.
 
 ## Cross-Repo Dependencies [OPEN]
 Depends on libstats via `find_package` (preferred) or `FetchContent`
-(fallback), currently pinned at v2.0.4 — confirmed current against
-libstats' actual latest release tag as of 2026-07-14 (see Version Pin
-Verification above). Check libstats' own PLAN.md/AGENTS.md for its
-current release before assuming this repo's pin is still current on any
-future session.
+(fallback), pinned at v2.1.0 as of 2026-07-21 (bumped from v2.0.4 for the
+pylibstats v0.4.0 release; see libstats CHANGELOG.md "[2.1.0]" for
+contents — clean-room erf/exp/log/cos, x86 subnormal fixes). Check
+libstats' own PLAN.md/AGENTS.md for its current release before assuming
+this repo's pin is still current on any future session.
 
 ## Next Steps
 - #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.

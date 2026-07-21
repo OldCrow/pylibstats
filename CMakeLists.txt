@@ -27,7 +27,7 @@ find_package(nanobind CONFIG REQUIRED)
 # ---------------------------------------------------------------------------
 # libstats — prefer installed package, fall back to FetchContent
 # ---------------------------------------------------------------------------
-find_package(libstats 2.0.4 QUIET)
+find_package(libstats 2.1.0 QUIET)
 
 if(NOT libstats_FOUND)
     message(STATUS "libstats not found via find_package — using FetchContent")
@@ -35,13 +35,17 @@ if(NOT libstats_FOUND)
     FetchContent_Declare(
         libstats
         GIT_REPOSITORY https://github.com/OldCrow/libstats.git
-        GIT_TAG        v2.0.4
+        GIT_TAG        v2.1.0
     )
     # Disable libstats tests/tools/examples when building as a subdirectory.
     set(LIBSTATS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(LIBSTATS_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
     set(LIBSTATS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    # Skip the global Windows /arch:AVX2 / /arch:AVX512 flag so wheels built on
+    # a given CI runner's CPU remain safe to distribute to end users with
+    # lower ISA support. Per-file SIMD flags (runtime dispatch) are unaffected.
+    set(LIBSTATS_PORTABLE ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(libstats)
     set(LIBSTATS_TARGET libstats_static)
 else()
