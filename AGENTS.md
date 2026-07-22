@@ -130,6 +130,18 @@ python -m pip install --no-build-isolation -ve . `
   -Ccmake.define.libstats_DIR=<libstats-install>\lib\cmake\libstats
 ```
 
+### CMake standard
+
+Full rules: `CMAKE-HOUSE-STYLE.md` in the Development root on dev machines (master copy, not checked in); this section is self-sufficient for this repo. pylibstats is built via
+scikit-build-core (the `pip install -e` path above is primary and
+authoritative); `CMakePresets.json` (schema 6, min CMake 3.25) exists only
+for direct-CMake dev/debugging, not the normal workflow: `release` →
+`build/`, `debug` → `build-debug/`. No project extras, no `generator`
+field. Deviation: prefers an installed `find_package(libstats)` over a
+local sibling checkout (deliberate contrast to pylibhmm — see Build model
+above and PLAN.md); falls back to pinned `FetchContent` (`v2.1.0`) only
+when no installed libstats is found.
+
 ## Platform-Specific Notes
 
 **Minimum macOS:** 13 Ventura (AppleClang 15 / Xcode 15). macOS Catalina (10.15) is not supported from `pylibstats` v0.3.0 / `libstats` v2.0.0 onwards.
@@ -194,7 +206,7 @@ foreach ($line in $envVars) {
   - Build Tools default path: `C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\`
   - Full VS default path: `C:\Program Files\Microsoft Visual Studio\2022\{edition}\`
 - **Smart App Control must be Off** (Windows Security → App & Browser Control → SAC settings). SAC blocks locally compiled executables and cannot be re-enabled without a Windows reset.
-- CMake ≥ 3.20: https://cmake.org/download/, `winget install Kitware.CMake`, or `choco install cmake`.
+- CMake ≥ 3.25: https://cmake.org/download/, `winget install Kitware.CMake`, or `choco install cmake`.
 
 ## Coding Conventions
 

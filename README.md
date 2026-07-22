@@ -36,7 +36,7 @@ dist.fit(samples)
 
 ## Building from source
 
-Requires Python ≥3.11, CMake ≥3.20, and a C++20 compiler.
+Requires Python ≥3.11, CMake ≥3.25, and a C++20 compiler.
 
 ```bash
 pip install .
