@@ -98,6 +98,14 @@ this repo's pin is still current on any future session.
 - #7: Run the deferred `ruff format` pass as its own reviewable change.
 - #6: Decide whether to adopt mypy.
 
+## Build-Stack Standardization (2026-07-23) [DERIVED]
+Cross-repo effort tracked in `~/Development/BUILD-STANDARDIZATION-PLAN.md`.
+Commit `870877d` (minimal CMakePresets.json, CMake minimum bumped to 3.25)
+was the only change this repo received — no Phase 3 work touched it (it
+consumes libstats via `find_package`/pinned `FetchContent`, not option
+names). AGENTS.md's CMake-standard section checked post-Phase-3 and is
+still accurate.
+
 ## Local Branch Cleanup (2026-07-14) [DERIVED]
 The two stale local branches (`bench/issue-2-scipy-comparison`,
 `fix/audit-v1.5.2`) were confirmed via GitHub PR history to be
