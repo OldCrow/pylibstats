@@ -42,7 +42,8 @@ Requires Python ≥3.11, CMake ≥3.25, and a C++20 compiler.
 pip install .
 ```
 
-This fetches libstats v2.1.0 via CMake FetchContent if not already installed.
+This fetches libstats via CMake FetchContent if not already installed, at the
+version pinned in `CMakeLists.txt` (`find_package` floor and `GIT_TAG`).
 
 ### Building against a local libstats
 

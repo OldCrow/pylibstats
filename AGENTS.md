@@ -24,19 +24,22 @@ Key files:
 
 Dependency notes:
 
-- Build first tries `find_package(libstats 2.1.0)`.
-- If not found, CMake fetches `libstats` from GitHub tag `v2.1.0`.
+- Build first tries `find_package(libstats)` at the version floor in `CMakeLists.txt`.
+- If not found, CMake fetches `libstats` from the `GIT_TAG` in `CMakeLists.txt`.
+- Those two version strings live only in `CMakeLists.txt` and are deliberately
+  not restated here; a `pin-currency` CI job asserts they agree with each other
+  and with libstats' newest release (see PLAN.md).
 - For local development against a custom `libstats` install, pass `libstats_DIR` (do not override `CMAKE_PREFIX_PATH`, which can break nanobind discovery).
 
 ## Architecture
 
 ### Build model
 `_core` is a single nanobind extension module built via scikit-build-core.
-`CMakeLists.txt` tries `find_package(libstats 2.1.0)` first; if not found, it
-falls back to `FetchContent` at `GIT_TAG v2.1.0`, and accepts a `libstats_DIR`
-override for local development builds (no implicit sibling-directory
-preference — unlike pylibhmm's `../libhmm` behavior, this is deliberate; see
-PLAN.md).
+`CMakeLists.txt` tries `find_package(libstats)` first at its declared version
+floor; if not found, it falls back to `FetchContent` at its `GIT_TAG`, and
+accepts a `libstats_DIR` override for local development builds (no implicit
+sibling-directory preference — unlike pylibhmm's `../libhmm` behavior, this
+is deliberate; see PLAN.md).
 
 ### `_common.h` — NumPy ⇔ libstats conversion
 Batch **input** is genuinely zero-copy: `pdf`/`log_pdf`/`cdf` construct a
@@ -139,7 +142,7 @@ for direct-CMake dev/debugging, not the normal workflow: `release` →
 `build/`, `debug` → `build-debug/`. No project extras, no `generator`
 field. Deviation: prefers an installed `find_package(libstats)` over a
 local sibling checkout (deliberate contrast to pylibhmm — see Build model
-above and PLAN.md); falls back to pinned `FetchContent` (`v2.1.0`) only
+above and PLAN.md); falls back to the pinned `FetchContent` tag only
 when no installed libstats is found.
 
 ## Platform-Specific Notes
@@ -159,7 +162,7 @@ python -m pytest tests -q
 ### Linux
 
 - Requires GCC ≥ 13 or Clang ≥ 17 for C++20 support.
-- If `libstats` is not found locally, CMake fetches it automatically at v2.1.0.
+- If `libstats` is not found locally, CMake fetches it automatically at the pinned `GIT_TAG` (see `CMakeLists.txt`).
 
 ```bash
 python -m pip install -e ".[test]" -Ccmake.build-type=Release

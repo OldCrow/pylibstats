@@ -8,10 +8,13 @@ on:
     branches: [main]
     paths-ignore: ['**.md', 'docs/**', 'LICENSE']
   # Monthly canary: catches drift with no code change to trigger it (Python
-  # release cycle, runner image rolls) instead of discovering breakage at
-  # the next real push.
+  # release cycle, runner image rolls, stale libstats pin) instead of
+  # discovering breakage at the next real push.
   schedule:
     - cron: '45 3 1 * *'
+  # Lets the canary-only jobs (pin-currency) be run on demand without
+  # waiting for the monthly cron.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -98,3 +101,77 @@ jobs:
             ASAN_OPTIONS=detect_leaks=0:alloc_dealloc_mismatch=0:verify_asan_link_order=0 \
             UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1 \
             pytest tests -v --tb=short
+
+  # ---------------------------------------------------------------------------
+  # pin-currency — canary-only (monthly cron / manual dispatch), not on push
+  # or PR.  Asks "is the pin still the RIGHT version?", which is distinct from
+  # "does the pinned version still build?" — the latter is covered by the
+  # normal matrix whenever the FetchContent fallback is taken.
+  #
+  # This repo has two coupled version strings that must agree with each other
+  # AND with libstats' newest release: the find_package() floor and the
+  # FetchContent GIT_TAG.  Drift between those two is its own failure mode
+  # (a floor above the fetched tag makes the fallback unsatisfiable), so all
+  # three are compared here.
+  #
+  # Motivation is historical, not hypothetical: the 2026-07-14 audit (PLAN.md
+  # "Version Pin Verification") found README.md still advertising v2.0.3 while
+  # the real pin and release were v2.0.4.  Catching it needed a manual
+  # cross-check against libstats' tags, and the fix was to re-sync the copy.
+  # Those restated copies are now gone; this job is what keeps the remaining
+  # single source honest.
+  # ---------------------------------------------------------------------------
+  pin-currency:
+    name: libstats pin currency (canary)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Compare pinned libstats version against newest libstats release
+        env:
+          LIBSTATS_REPO: https://github.com/OldCrow/libstats.git
+        run: |
+          set -euo pipefail
+
+          # '|| true' on each lookup: under 'set -e' a failed command
+          # substitution aborts the step immediately, which would skip the
+          # explicit checks below and emit no actionable ::error:: message.
+          floor=$(grep -oE 'find_package\(libstats[[:space:]]+[0-9][0-9.]*' CMakeLists.txt \
+                  | awk '{print $2}' || true)
+          tag=$(grep -oE '^[[:space:]]*GIT_TAG[[:space:]]+v[^[:space:]]+' CMakeLists.txt \
+                | awk '{print $2}' || true)
+
+          if [ -z "${floor}" ] || [ -z "${tag}" ]; then
+            echo "::error::could not parse find_package floor and/or GIT_TAG from CMakeLists.txt"
+            exit 1
+          fi
+
+          latest=$(git ls-remote --tags --refs "${LIBSTATS_REPO}" 'v*' \
+                   | sed 's|.*refs/tags/||' | sort -V | tail -1 || true)
+          if [ -z "${latest}" ]; then
+            echo "::error::could not resolve newest libstats tag from ${LIBSTATS_REPO}"
+            exit 1
+          fi
+
+          echo "find_package floor: ${floor}"
+          echo "FetchContent tag:   ${tag}"
+          echo "libstats latest:    ${latest}"
+
+          rc=0
+          if [ "${tag#v}" != "${floor}" ]; then
+            echo "::error::internal mismatch — find_package floor ${floor} does not match \
+          GIT_TAG ${tag}. These must agree, or the FetchContent fallback fetches a tag \
+          that then fails its own find_package floor."
+            rc=1
+          fi
+          if [ "${tag}" != "${latest}" ]; then
+            echo "::error::libstats pin is stale — pinned ${tag}, newest release ${latest}. \
+          Bump both the find_package floor and GIT_TAG in CMakeLists.txt together."
+            rc=1
+          fi
+          [ "${rc}" -eq 0 ] && echo "pin is current and internally consistent"
+          exit "${rc}"

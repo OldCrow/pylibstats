@@ -87,11 +87,23 @@ Last reconciled against live GitHub state: 2026-07-14.
 
 ## Cross-Repo Dependencies [OPEN]
 Depends on libstats via `find_package` (preferred) or `FetchContent`
-(fallback), pinned at v2.1.0 as of 2026-07-21 (bumped from v2.0.4 for the
-pylibstats v0.4.0 release; see libstats CHANGELOG.md "[2.1.0]" for
-contents — clean-room erf/exp/log/cos, x86 subnormal fixes). Check
-libstats' own PLAN.md/AGENTS.md for its current release before assuming
-this repo's pin is still current on any future session.
+(fallback). **The pinned version is deliberately not restated here.**
+`CMakeLists.txt` holds the only two copies that matter — the
+`find_package` version floor and the `FetchContent` `GIT_TAG` — and both
+must agree with each other and with libstats' newest release.
+
+This repo has already been burned by a restated copy: the 2026-07-14
+audit (see "Version Pin Verification" above) found `README.md` still
+advertising v2.0.3 while the actual pin and release were v2.0.4. It took
+a manual cross-check against libstats' tags to catch, and it was fixed by
+re-syncing the copy — the approach that guarantees recurrence. The copies
+are now removed instead.
+
+Currency and internal consistency are enforced mechanically by the
+`pin-currency` job in the monthly CI canary (also runnable on demand via
+`workflow_dispatch`): it fails if the floor and the tag disagree, or if
+the tag has fallen behind libstats' newest release. Bumping remains a
+deliberate act — move the floor and the tag together.
 
 ## Next Steps
 - #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
