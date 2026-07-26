@@ -135,7 +135,8 @@ python -m pip install --no-build-isolation -ve . `
 
 ### CMake standard
 
-Full rules: `CMAKE-HOUSE-STYLE.md` in the Development root on dev machines (master copy, not checked in); this section is self-sufficient for this repo. pylibstats is built via
+Full rules: [CMake House Style](https://github.com/OldCrow/standards/blob/main/CMAKE-HOUSE-STYLE.md)
+in the fleet standards repo; this section is self-sufficient for this repo. pylibstats is built via
 scikit-build-core (the `pip install -e` path above is primary and
 authoritative); `CMakePresets.json` (schema 6, min CMake 3.25) exists only
 for direct-CMake dev/debugging, not the normal workflow: `release` →

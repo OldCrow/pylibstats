@@ -111,7 +111,8 @@ deliberate act — move the floor and the tag together.
 - #6: Decide whether to adopt mypy.
 
 ## Build-Stack Standardization (2026-07-23) [DERIVED]
-Cross-repo effort tracked in `~/Development/BUILD-STANDARDIZATION-PLAN.md`.
+Cross-repo effort tracked in the fleet standards repo
+([record](https://github.com/OldCrow/standards/blob/main/records/BUILD-STANDARDIZATION-PLAN.md)).
 Commit `870877d` (minimal CMakePresets.json, CMake minimum bumped to 3.25)
 was the only change this repo received — no Phase 3 work touched it (it
 consumes libstats via `find_package`/pinned `FetchContent`, not option
