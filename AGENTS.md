@@ -239,5 +239,33 @@ inherited from a stricter parent convention.
 bash scripts/lint-cpp.sh
 ```
 
+## CI / Validation
+
+Fleet-wide workflow rules (runner budget, bounded parallelism, ISA hazards on
+hosted runners, action pinning):
+[CI House Style](https://github.com/OldCrow/standards/blob/main/CI-HOUSE-STYLE.md).
+
+Three workflows:
+
+- `ci.yml` — `build-and-test` over an explicit include-list, not a
+  cross-product: all three Python versions on Linux, oldest+newest only on
+  macOS and Windows (the version axis rarely diverges by OS for a nanobind
+  extension, and those runners cost 10x/2x Linux minutes). Plus a combined
+  ASan+UBSan job on Linux.
+- `wheels.yml` — cibuildwheel, gated on `v*` tags and `workflow_dispatch`,
+  never on PRs. `CIBW_SKIP`'s **upper** bound must move together with the
+  versions `ci.yml` tests: shipping a wheel for a Python that CI never
+  tested is the failure this bound exists to prevent.
+- `lint-workflows.yml` — actionlint + zizmor (`--min-severity medium`), on
+  workflow-file changes only.
+
+The monthly canary (`schedule`) also runs `pin-currency`, which compares the
+`find_package(libstats ...)` floor and the `GIT_TAG` pin in `CMakeLists.txt`
+against libstats' newest release. Buildability and currency are different
+questions: every run answers the first, only the canary answers the second.
+That job is why the pin value is **not** restated in prose anywhere — the
+check reads `CMakeLists.txt`, so `CMakeLists.txt` is the single source of
+truth.
+
 ## Open Items
 See PLAN.md for current status, in-progress work, and open questions.
