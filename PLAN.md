@@ -105,6 +105,21 @@ Currency and internal consistency are enforced mechanically by the
 the tag has fallen behind libstats' newest release. Bumping remains a
 deliberate act — move the floor and the tag together.
 
+[2026-08-16] Bumped to libstats **v2.2.0** (floor and tag together), and
+pylibstats goes to **0.5.0** rather than 0.4.1 in the same change. The
+minor bump is the point: libstats #97 means every consumer of the
+installed v2.1.0 package — this one included — was silently compiling the
+Tier 2 Bessel fallback, so `bessel_i0(10)` carried ~1.3e-08 relative error
+where the library itself measures 1.5e-16. Wheel output changes by eight
+orders of magnitude on the VonMises paths that reach it. That is a
+behaviour change users can observe, not packaging bookkeeping, and a patch
+number would have understated it exactly the way 2.1.1 would have
+understated the libstats release it tracks.
+
+Note the pin bump also raises this package's effective CMake floor to
+libstats' new 3.20 → 3.25 minimum. No action needed: pylibstats already
+declares `cmake_minimum_required(VERSION 3.25)`, checked before bumping.
+
 ## Next Steps
 - #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
 - #7: Run the deferred `ruff format` pass as its own reviewable change.
