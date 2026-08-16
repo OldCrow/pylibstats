@@ -79,11 +79,9 @@ Last reconciled against live GitHub state: 2026-07-14.
 - [2026-08-16, resolved same day] The pylibhmm `wheels.yml` denylist defect
   flagged here was closed by pylibhmm v0.10.0 (`c48008c`): `CIBW_BUILD`
   allowlist, abi3 pairing completed, cibuildwheel pinned.
-- [2026-08-16] **`cp314-cp314t` ships without a 3.14t row in `ci.yml`.**
-  The allowlist is defined as what the ci.yml matrix covers, and the matrix
-  gained plain 3.14 only — the free-threaded wheel is tested solely by
-  cibuildwheel's own per-wheel check. pylibhmm closed its equivalent gap in
-  v0.10.0 (its ci.yml carries 3.14t); this repo has not.
+- [2026-08-16, resolved same day] The missing 3.14t row in `ci.yml` flagged
+  here was closed by `73f7f49`: Linux-only free-threaded row matching
+  pylibhmm v0.10.0, CI green including the new `3.14t` job.
 - mypy is not adopted for the Python surface — not evaluated this
   session (ruff covers lint/format; typing strictness is a separate,
   undecided question). Tracked as issue #6.
