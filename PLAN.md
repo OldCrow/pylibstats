@@ -76,14 +76,14 @@ Last reconciled against live GitHub state: 2026-07-14.
 - (none currently tracked — populate as work starts).
 
 ## Known Gaps [OPEN]
-- [2026-08-16] **`pylibhmm/.github/workflows/wheels.yml` carries the same
-  denylist defect this repo just fixed, and worse.** Its `CIBW_SKIP` is
-  `*-musllinux_* cp39-* cp310-* cp311-*` with no cp314/cp315 entry at all,
-  and its cibuildwheel install is likewise unpinned — so its next tagged
-  release builds cp314, cp314t, cp315 and cp315t and fails the same way, at
-  the same moment. Not fixed here; different repo. The two files were
-  deliberately kept as mirrors ("bump both together"), which is exactly why
-  the defect propagated.
+- [2026-08-16, resolved same day] The pylibhmm `wheels.yml` denylist defect
+  flagged here was closed by pylibhmm v0.10.0 (`c48008c`): `CIBW_BUILD`
+  allowlist, abi3 pairing completed, cibuildwheel pinned.
+- [2026-08-16] **`cp314-cp314t` ships without a 3.14t row in `ci.yml`.**
+  The allowlist is defined as what the ci.yml matrix covers, and the matrix
+  gained plain 3.14 only — the free-threaded wheel is tested solely by
+  cibuildwheel's own per-wheel check. pylibhmm closed its equivalent gap in
+  v0.10.0 (its ci.yml carries 3.14t); this repo has not.
 - mypy is not adopted for the Python surface — not evaluated this
   session (ruff covers lint/format; typing strictness is a separate,
   undecided question). Tracked as issue #6.
@@ -183,6 +183,13 @@ scikit-build-core disables limited-API by itself where it cannot apply — on
 3.11 (`target_minor <= sys.version_info.minor` is false), on PyPy, and on
 free-threaded builds — matching nanobind's own gate, so no per-version
 configuration is needed.
+
+Published as a fleet standard 2026-08-16:
+[CI House Style §9](https://github.com/OldCrow/standards/blob/main/CI-HOUSE-STYLE.md#9-wheel-builds-pylibhmm-pylibstats),
+merged with pylibhmm's twin incidents. AGENTS.md's `wheels.yml` bullet was
+rewritten the same day (it still described the retired `CIBW_SKIP`
+upper-bound rule); this section stays as the incident record behind the
+rules.
 
 ## Next Steps
 - #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
