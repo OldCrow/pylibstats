@@ -48,7 +48,12 @@ jobs:
           python-version: "3.12"
 
       - name: Install cibuildwheel
-        run: pip install cibuildwheel
+        # Pinned, not floating. Unpinned, the set of interpreters cibuildwheel
+        # knows about grows on upstream's schedule rather than ours — which is
+        # how cp314t and cp315 entered the build set between the 2026-08-01
+        # canary and the v0.5.0 tag. With a pin, that set changes only when
+        # someone bumps this line and watches the run.
+        run: pip install cibuildwheel==4.2.0
 
       - name: Build wheels
         run: cibuildwheel --output-dir wheelhouse
@@ -61,11 +66,22 @@ jobs:
           CIBW_ARCHS_LINUX: ${{ matrix.cibw_archs_linux }}
           # Windows: x86_64 only
           CIBW_ARCHS_WINDOWS: "AMD64"
-          # Skip PyPy, musllinux, older Pythons, and anything newer than the
-          # versions actually tested in ci.yml (currently 3.11-3.13) — keep
-          # this in lockstep with ci.yml's matrix so nothing ships untested
-          # (mirrors pylibhmm's wheels.yml pattern; bump both together).
-          CIBW_SKIP: "*-musllinux_* cp39-* cp310-* cp314-*"
+          # Build exactly the interpreters ci.yml tests (3.11-3.13), as an
+          # ALLOWLIST. This was a CIBW_SKIP denylist until 2026-08-16, when it
+          # failed open twice in one run: "cp314-*" does not match the
+          # free-threaded "cp314t-" prefix, and nothing named cp315 because 3.15
+          # did not exist when the line was written. Both got built and tested,
+          # and cp315 took the run down — no scipy wheel exists for it, so
+          # CIBW_TEST_REQUIRES fell back to a source build and died on missing
+          # OpenBLAS. A denylist cannot express "only what ci.yml tests"; every
+          # new interpreter upstream adds is shipped untested until someone
+          # notices. Keep this in lockstep with ci.yml's matrix (mirrors
+          # pylibhmm's wheels.yml pattern; bump both together).
+          CIBW_BUILD: "cp311-* cp312-* cp313-*"
+          # musllinux is still a denylist entry: it is an ABI axis, orthogonal
+          # to the interpreter allowlist above, and CIBW_SKIP is applied after
+          # CIBW_BUILD.
+          CIBW_SKIP: "*-musllinux_*"
           # Build dependencies (installed in the build environment)
           CIBW_BUILD_FRONTEND: "pip"
           # Test the built wheel

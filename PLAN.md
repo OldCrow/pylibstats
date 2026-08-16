@@ -76,6 +76,14 @@ Last reconciled against live GitHub state: 2026-07-14.
 - (none currently tracked — populate as work starts).
 
 ## Known Gaps [OPEN]
+- [2026-08-16] **`pylibhmm/.github/workflows/wheels.yml` carries the same
+  denylist defect this repo just fixed, and worse.** Its `CIBW_SKIP` is
+  `*-musllinux_* cp39-* cp310-* cp311-*` with no cp314/cp315 entry at all,
+  and its cibuildwheel install is likewise unpinned — so its next tagged
+  release builds cp314, cp314t, cp315 and cp315t and fails the same way, at
+  the same moment. Not fixed here; different repo. The two files were
+  deliberately kept as mirrors ("bump both together"), which is exactly why
+  the defect propagated.
 - mypy is not adopted for the Python surface — not evaluated this
   session (ruff covers lint/format; typing strictness is a separate,
   undecided question). Tracked as issue #6.
@@ -119,6 +127,15 @@ understated the libstats release it tracks.
 Note the pin bump also raises this package's effective CMake floor to
 libstats' new 3.20 → 3.25 minimum. No action needed: pylibstats already
 declares `cmake_minimum_required(VERSION 3.25)`, checked before bumping.
+
+The first v0.5.0 tag push failed to publish, and **not because of the pin**
+— the extension built against libstats v2.2.0 on all four platforms. The
+wheels workflow was building six interpreters where it intends three; cp315
+has no scipy wheel, so `CIBW_TEST_REQUIRES` fell back to a source build and
+died on missing OpenBLAS. Fixed by replacing the `CIBW_SKIP` denylist with a
+`CIBW_BUILD` allowlist and pinning cibuildwheel; the tag was then moved to
+the fix. `publish` needs both wheel jobs, so nothing reached PyPI and the
+version number was never burned.
 
 ## Next Steps
 - #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
