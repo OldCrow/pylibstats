@@ -242,7 +242,7 @@ bash scripts/lint-cpp.sh
 ## CI / Validation
 
 Fleet-wide workflow rules (runner budget, bounded parallelism, ISA hazards on
-hosted runners, action pinning):
+hosted runners, action pinning, wheel builds):
 [CI House Style](https://github.com/OldCrow/standards/blob/main/CI-HOUSE-STYLE.md).
 
 Three workflows:
@@ -252,10 +252,20 @@ Three workflows:
   macOS and Windows (the version axis rarely diverges by OS for a nanobind
   extension, and those runners cost 10x/2x Linux minutes). Plus a combined
   ASan+UBSan job on Linux.
-- `wheels.yml` — cibuildwheel, gated on `v*` tags and `workflow_dispatch`,
-  never on PRs. `CIBW_SKIP`'s **upper** bound must move together with the
-  versions `ci.yml` tests: shipping a wheel for a Python that CI never
-  tested is the failure this bound exists to prevent.
+- `wheels.yml` — cibuildwheel (pinned), gated on `v*` tags and
+  `workflow_dispatch`, never on PRs. Follows the fleet wheel contract
+  ([CI House Style §9](https://github.com/OldCrow/standards/blob/main/CI-HOUSE-STYLE.md#9-wheel-builds-pylibhmm-pylibstats)),
+  settled here at v0.5.0: `CIBW_BUILD` is an allowlist *defined* as the
+  interpreters `ci.yml` tests — the `CIBW_SKIP` denylist it replaced
+  failed open twice in the v0.5.0 tag run (`cp314-*` missing the
+  free-threaded `cp314t-` prefix, and nothing naming a cp315 that did
+  not exist when the line was written). `requires-python` moves in the
+  same change as the built set. The cp312 wheel is Stable ABI, and
+  `wheel.py-api` in `pyproject.toml` plus `SKBUILD_SABI_COMPONENT` in
+  CMake are one mechanism in two files — set both, or the result is an
+  abi3-tagged, version-locked wheel that cibuildwheel is structurally
+  unable to catch. `musllinux` stays a `CIBW_SKIP` entry (an ABI axis
+  orthogonal to the interpreter set, applied after BUILD).
 - `lint-workflows.yml` — actionlint + zizmor (`--min-severity medium`), on
   workflow-file changes only.
 
