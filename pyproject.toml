@@ -15,6 +15,21 @@ dependencies = ["numpy>=1.20"]
 test = ["pytest>=7.0", "scipy"]
 
 [tool.scikit-build]
+# Build one CPython Stable ABI (abi3) wheel covering 3.12 and every later
+# version, instead of a separate wheel per interpreter. scikit-build-core turns
+# this off by itself where the limited API does not apply — on 3.11 (the target
+# is above the running interpreter), on PyPy, and on free-threaded builds — so
+# those still produce ordinary version-specific wheels with no extra config.
+#
+# REQUIRES the ${SKBUILD_SABI_COMPONENT} argument on find_package(Python) in
+# CMakeLists.txt. This setting only TAGS the wheel abi3; it does not verify one
+# was built. Without that argument the Python::SABIModule target never exists,
+# nanobind silently drops STABLE_ABI, and the result is a wheel tagged
+# cp312-abi3 containing a python312.dll-linked binary that cannot import
+# anywhere but 3.12. Verified by dumpbin: with the argument the module links
+# python3.dll and is named _core.pyd; without it, python312.dll and
+# _core.cp312-win_amd64.pyd. Nothing warns. Do not set one without the other.
+wheel.py-api = "cp312"
 cmake.build-type = "Release"
 wheel.packages = ["src/pylibstats"]
 editable.mode = "redirect"

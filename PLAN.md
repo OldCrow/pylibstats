@@ -130,12 +130,59 @@ declares `cmake_minimum_required(VERSION 3.25)`, checked before bumping.
 
 The first v0.5.0 tag push failed to publish, and **not because of the pin**
 — the extension built against libstats v2.2.0 on all four platforms. The
-wheels workflow was building six interpreters where it intends three; cp315
+wheels workflow was building six interpreters where it intended three; cp315
 has no scipy wheel, so `CIBW_TEST_REQUIRES` fell back to a source build and
-died on missing OpenBLAS. Fixed by replacing the `CIBW_SKIP` denylist with a
-`CIBW_BUILD` allowlist and pinning cibuildwheel; the tag was then moved to
-the fix. `publish` needs both wheel jobs, so nothing reached PyPI and the
-version number was never burned.
+died on missing OpenBLAS. `publish` needs both wheel jobs, so nothing reached
+PyPI and the version number was never burned. See "Wheel targets" below for
+what the investigation turned up and what shipped instead.
+
+## Wheel targets and the Stable ABI (2026-08-16) [DERIVED]
+
+**3.14 has been shipping since 0.1.5 and was never deliberately withdrawn.**
+Every published release, 0.1.5 (2026-04-26) through 0.4.0, carries 25 wheels
+including full `cp314-cp314` and `cp314-cp314t` sets. `CIBW_SKIP` gained a
+`cp314-*` entry in `fa6ea59`, four hours *after* the v0.4.0 tag — and no tag
+has been cut since, so the intent to stop never reached PyPI. Verified against
+the PyPI JSON API, not inferred from the workflow.
+
+Dropping a target that already ships is worse than it looks. `requires-python`
+is `>=3.11`, which still admits those users, so pip would offer them the new
+version's **sdist** and attempt to compile libstats on their machine — an
+error, where being left on the previous release would merely have been stale.
+That is why 3.11 and both 3.14 variants stay in the allowlist. cp315 is out
+until scipy publishes a wheel for it; the blocker is `CIBW_TEST_REQUIRES`, not
+anything this package builds.
+
+**Adopted the Stable ABI**, so 3.12/3.13/3.14 converge on one `cp312-abi3`
+wheel: 25 wheels per release becomes 3 distinct wheels per arch
+(`cp311-cp311`, `cp312-abi3`, `cp314-cp314t`), and 3.15+ needs no workflow
+change once its ecosystem catches up. `nanobind_add_module` had carried
+`STABLE_ABI` since the beginning with no effect whatever.
+
+**The trap, because it is silent and would ship broken wheels.**
+`wheel.py-api` only TAGS a wheel abi3; it does not check that one was built.
+nanobind gates `STABLE_ABI` on `TARGET Python::SABIModule`, which exists only
+if `find_package(Python)` was given `${SKBUILD_SABI_COMPONENT}`. Set the
+pyproject key without the CMake argument and you get a wheel *tagged*
+`cp312-abi3` around a *version-locked* binary — installs on 3.13+, then fails
+to import. Nothing warns at any layer. Proven with `dumpbin` on two wheels
+with byte-identical filenames:
+
+| | module inside | links |
+|---|---|---|
+| `wheel.py-api` alone | `_core.cp312-win_amd64.pyd` | `python312.dll` |
+| plus `${SKBUILD_SABI_COMPONENT}` | `_core.pyd` | `python3.dll` |
+
+CI would not have caught it: cibuildwheel tests each wheel on the interpreter
+that built it, which is the one version where the broken form works. Hence the
+allowlist keeps listing cp313 and cp314 even though they produce no additional
+wheel — installing the abi3 wheel on an interpreter it was not built with is
+the only check that closes this class.
+
+scikit-build-core disables limited-API by itself where it cannot apply — on
+3.11 (`target_minor <= sys.version_info.minor` is false), on PyPy, and on
+free-threaded builds — matching nanobind's own gate, so no per-version
+configuration is needed.
 
 ## Next Steps
 - #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.

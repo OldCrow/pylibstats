@@ -8,7 +8,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # ---------------------------------------------------------------------------
 # Python + nanobind
 # ---------------------------------------------------------------------------
-find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+# SKBUILD_SABI_COMPONENT is set to "Development.SABIModule" by scikit-build-core
+# when wheel.py-api requests a Stable ABI build, and to "" otherwise — so this is
+# inert for ordinary builds and for direct CMake invocation, where it is
+# undefined and expands to nothing. It is not optional when py-api IS set:
+# nanobind gates STABLE_ABI on `TARGET Python::SABIModule` and silently falls
+# back to a version-specific build if the component was never requested, which
+# yields an abi3-TAGGED wheel around a version-LOCKED binary. See pyproject.toml.
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module ${SKBUILD_SABI_COMPONENT})
 
 # scikit-build-core adds site-packages to CMAKE_PREFIX_PATH automatically.
 # For direct CMake invocation, discover nanobind via Python as a fallback.

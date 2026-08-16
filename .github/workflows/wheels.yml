@@ -66,18 +66,34 @@ jobs:
           CIBW_ARCHS_LINUX: ${{ matrix.cibw_archs_linux }}
           # Windows: x86_64 only
           CIBW_ARCHS_WINDOWS: "AMD64"
-          # Build exactly the interpreters ci.yml tests (3.11-3.13), as an
-          # ALLOWLIST. This was a CIBW_SKIP denylist until 2026-08-16, when it
-          # failed open twice in one run: "cp314-*" does not match the
+          # ALLOWLIST, not a denylist. Until 2026-08-16 this was a CIBW_SKIP,
+          # which failed open twice in one run: "cp314-*" does not match the
           # free-threaded "cp314t-" prefix, and nothing named cp315 because 3.15
-          # did not exist when the line was written. Both got built and tested,
-          # and cp315 took the run down — no scipy wheel exists for it, so
+          # did not exist when the line was written. Both got built, and cp315
+          # took the run down — no scipy wheel exists for it, so
           # CIBW_TEST_REQUIRES fell back to a source build and died on missing
           # OpenBLAS. A denylist cannot express "only what ci.yml tests"; every
-          # new interpreter upstream adds is shipped untested until someone
-          # notices. Keep this in lockstep with ci.yml's matrix (mirrors
-          # pylibhmm's wheels.yml pattern; bump both together).
-          CIBW_BUILD: "cp311-* cp312-* cp313-*"
+          # interpreter upstream adds ships untested until someone notices.
+          #
+          # The same prefix trap applies here: "cp314-*" alone does NOT cover
+          # cp314t. Both are listed deliberately.
+          #
+          # 3.11 and 3.14 (both variants) are listed because 0.1.5 through 0.4.0
+          # all published them, and dropping a target that already ships is a
+          # regression — worse than it looks, since requires-python still admits
+          # those users, so pip would offer them this version's SDIST and try to
+          # compile libstats on their machine rather than falling back to the
+          # last working release. cp315 is excluded until scipy ships a wheel
+          # for it (it is CIBW_TEST_REQUIRES, not our build, that cannot cope).
+          #
+          # Only THREE distinct wheels come out of these five, because
+          # wheel.py-api = "cp312" makes 3.12/3.13/3.14 converge on one
+          # cp312-abi3 wheel: cp311-cp311, cp312-abi3, cp314-cp314t. The
+          # apparent redundancy is the point — it installs and tests the abi3
+          # wheel on interpreters it was not built with, the only check that
+          # catches an abi3-TAGGED wheel wrapping a version-LOCKED binary.
+          # Keep in lockstep with ci.yml's matrix.
+          CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-* cp314t-*"
           # musllinux is still a denylist entry: it is an ABI axis, orthogonal
           # to the interpreter allowlist above, and CIBW_SKIP is applied after
           # CIBW_BUILD.

@@ -31,18 +31,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # All 3 Python versions on Linux (cheap); macOS/Windows only test the
-        # oldest+newest supported version — the version axis rarely diverges
-        # by OS for a nanobind extension, and macOS/Windows runners cost
-        # 10x/2x Linux minutes on private repos.
+        # Every supported Python on Linux (cheap); macOS/Windows only the
+        # oldest+newest — the version axis rarely diverges by OS for a nanobind
+        # extension, and macOS/Windows runners cost 10x/2x Linux minutes on
+        # private repos. 3.14 added 2026-08-16: it had been shipping in wheels
+        # since 0.1.5 while never being tested here, and wheels.yml's allowlist
+        # is defined as "what this matrix covers", so the two must agree.
         include:
           - { os: ubuntu-latest,  python: "3.11" }
           - { os: ubuntu-latest,  python: "3.12" }
           - { os: ubuntu-latest,  python: "3.13" }
+          - { os: ubuntu-latest,  python: "3.14" }
           - { os: macos-latest,   python: "3.11" }
-          - { os: macos-latest,   python: "3.13" }
+          - { os: macos-latest,   python: "3.14" }
           - { os: windows-latest, python: "3.11" }
-          - { os: windows-latest, python: "3.13" }
+          - { os: windows-latest, python: "3.14" }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
