@@ -139,6 +139,16 @@ died on missing OpenBLAS. `publish` needs both wheel jobs, so nothing reached
 PyPI and the version number was never burned. See "Wheel targets" below for
 what the investigation turned up and what shipped instead.
 
+[2026-08-22] Bumped to libstats **v2.3.0** (floor and tag together), and
+pylibstats goes to **0.6.0** rather than 0.5.1, on the 0.5.0 reasoning:
+libstats v2.3.0 changes numbers users observe — LogNormal and Gaussian CDF
+lower tails no longer collapse to 0 (libstats #49 pattern), von Mises CDF
+via the Bessel series (#51), the closed-form Cauchy CDF (#48), and
+clean-room SIMD cos/sin at every x86 tier (#95). No binding-surface change.
+libstats v2.3.1 (the correctness patch carrying #105, LogNormal batch
+cdf(NaN) = 1) is imminent; re-bump when it is cut. The bump was verified
+locally through the FetchContent path (no libstats installed here).
+
 ## Wheel targets and the Stable ABI (2026-08-16) [DERIVED]
 
 **3.14 has been shipping since 0.1.5 and was never deliberately withdrawn.**
@@ -195,15 +205,9 @@ upper-bound rule); this section stays as the incident record behind the
 rules.
 
 ## Next Steps
-1. Bump the libstats pin — move the `find_package` floor and `GIT_TAG`
-   together — to v2.3.0, or straight to v2.3.1 if imminent (v2.3.1 carries
-   libstats #105, LogNormal batch cdf(NaN) = 1, which reaches wheel users).
-   The `pin-currency` job in `ci.yml` fails on its next monthly run until
-   then; a `workflow_dispatch` run surfaces it now.
-2. Close #15 on GitHub (resolved in-tree 2026-08-16).
-3. #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
-4. #7: Run the deferred `ruff format` pass as its own reviewable change.
-5. #6: Decide whether to adopt mypy.
+1. #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
+2. #7: Run the deferred `ruff format` pass as its own reviewable change.
+3. #6: Decide whether to adopt mypy.
 
 ## Build-Stack Standardization (2026-07-23) [DERIVED]
 Cross-repo effort tracked in the fleet standards repo
