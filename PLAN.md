@@ -44,7 +44,7 @@ session: `README.md` still said "v2.0.3" in the FetchContent build
 instructions; corrected to v2.0.4. No version-pin gap remains to defer.
 
 ## GitHub Synchronization [DERIVED]
-Last reconciled against live GitHub state: 2026-07-14.
+Last reconciled against live GitHub state: 2026-08-22.
 - GitHub is the collaborator-facing source for issues and milestones; this
   PLAN.md is the agent-facing durable project state. Keep both in sync.
 - When creating, closing, reopening, retitling, or moving a GitHub issue or
@@ -66,11 +66,16 @@ Last reconciled against live GitHub state: 2026-07-14.
 - None currently exist in this repository (checked 2026-07-14).
 
 ## GitHub Issues Without Milestone [DERIVED]
-- Open issues (filed 2026-07-14, from this session's Known Gaps/Next Steps):
-  - #5 Wire ruff check and lint-cpp.sh into CI
-  - #6 Decide whether to adopt mypy for the Python surface
+- Open issues:
+  - #5 Wire ruff check and lint-cpp.sh into CI (filed 2026-07-14)
+  - #6 Decide whether to adopt mypy for the Python surface (filed 2026-07-14)
   - #7 Run deferred ruff format pass across src/pylibstats, tests, examples
-- Closed issues: 1 as of 2026-07-14.
+    (filed 2026-07-14)
+  - #15 allowlist ships cp314t but `ci.yml` has no 3.14t row — resolved
+    in-tree 2026-08-16 (`73f7f49`, CI green with the new `3.14t` job);
+    still open on GitHub as of 2026-08-22, so closing it is the one step
+    left.
+- Closed issues: 1 as of 2026-08-22.
 
 ## In Progress [OPEN]
 - (none currently tracked — populate as work starts).
@@ -190,9 +195,15 @@ upper-bound rule); this section stays as the incident record behind the
 rules.
 
 ## Next Steps
-- #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
-- #7: Run the deferred `ruff format` pass as its own reviewable change.
-- #6: Decide whether to adopt mypy.
+1. Bump the libstats pin — move the `find_package` floor and `GIT_TAG`
+   together — to v2.3.0, or straight to v2.3.1 if imminent (v2.3.1 carries
+   libstats #105, LogNormal batch cdf(NaN) = 1, which reaches wheel users).
+   The `pin-currency` job in `ci.yml` fails on its next monthly run until
+   then; a `workflow_dispatch` run surfaces it now.
+2. Close #15 on GitHub (resolved in-tree 2026-08-16).
+3. #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
+4. #7: Run the deferred `ruff format` pass as its own reviewable change.
+5. #6: Decide whether to adopt mypy.
 
 ## Build-Stack Standardization (2026-07-23) [DERIVED]
 Cross-repo effort tracked in the fleet standards repo
