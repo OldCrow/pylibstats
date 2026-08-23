@@ -44,7 +44,7 @@ session: `README.md` still said "v2.0.3" in the FetchContent build
 instructions; corrected to v2.0.4. No version-pin gap remains to defer.
 
 ## GitHub Synchronization [DERIVED]
-Last reconciled against live GitHub state: 2026-08-22.
+Last reconciled against live GitHub state: 2026-08-23.
 - GitHub is the collaborator-facing source for issues and milestones; this
   PLAN.md is the agent-facing durable project state. Keep both in sync.
 - When creating, closing, reopening, retitling, or moving a GitHub issue or
@@ -140,7 +140,9 @@ PyPI and the version number was never burned. See "Wheel targets" below for
 what the investigation turned up and what shipped instead.
 
 [2026-08-22] Bumped to libstats **v2.3.0** (floor and tag together), and
-pylibstats goes to **0.6.0** rather than 0.5.1, on the 0.5.0 reasoning:
+pylibstats goes to **0.6.0** rather than 0.5.1 — **released 2026-08-22**
+(tag v0.6.0, wheels + CI + pin-currency green, PyPI 0.6.0, GitHub
+release) — on the 0.5.0 reasoning:
 libstats v2.3.0 changes numbers users observe — LogNormal and Gaussian CDF
 lower tails no longer collapse to 0 (libstats #49 pattern), von Mises CDF
 via the Bessel series (#51), the closed-form Cauchy CDF (#48), and
