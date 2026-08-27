@@ -160,8 +160,9 @@ e.g. LogNormal batch cdf(NaN) = 1), the von Mises CDF is correct across
 the ±π seam for κ > 1000 (#106), and NegBin/Geometric quantiles work past
 INT_MAX (#116). No binding-surface change. Verified locally on Windows
 through the FetchContent path: 424/424 pytest against the fetched v2.3.1
-tag. Released 2026-08-25 (tag v0.6.1 → wheels.yml → PyPI via trusted
-publishing; GitHub release).
+tag. Released 2026-08-26 (tag v0.6.1 → wheels.yml all green — sdist +
+linux x86_64/aarch64 + macos + windows — → PyPI 0.6.1 via trusted
+publishing, 16 artifacts; GitHub release).
 
 ## Wheel targets and the Stable ABI (2026-08-16) [DERIVED]
 
