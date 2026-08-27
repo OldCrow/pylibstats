@@ -151,6 +151,18 @@ libstats v2.3.1 (the correctness patch carrying #105, LogNormal batch
 cdf(NaN) = 1) is imminent; re-bump when it is cut. The bump was verified
 locally through the FetchContent path (no libstats installed here).
 
+[2026-08-25] Bumped to libstats **v2.3.1** (floor and tag together,
+8ef6a2b), and pylibstats goes to **0.6.1** — a patch, since libstats
+v2.3.1 is itself a correctness patch with no API change. Numbers users
+observe change for the better: batch pdf/logpdf/cdf(NaN) now return NaN
+on every SIMD tier (libstats #105/#102 — 0.6.0 returned finite garbage,
+e.g. LogNormal batch cdf(NaN) = 1), the von Mises CDF is correct across
+the ±π seam for κ > 1000 (#106), and NegBin/Geometric quantiles work past
+INT_MAX (#116). No binding-surface change. Verified locally on Windows
+through the FetchContent path: 424/424 pytest against the fetched v2.3.1
+tag. Released 2026-08-25 (tag v0.6.1 → wheels.yml → PyPI via trusted
+publishing; GitHub release).
+
 ## Wheel targets and the Stable ABI (2026-08-16) [DERIVED]
 
 **3.14 has been shipping since 0.1.5 and was never deliberately withdrawn.**
