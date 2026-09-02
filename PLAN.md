@@ -15,6 +15,12 @@
   takes a vector, not a span); batch `ppf` loops scalar-wise since
   libstats has no batch quantile method. See AGENTS.md Architecture.
 - `__init__.pyi` / `_core.pyi` are hand-written, not tool-generated.
+- pyright is the editor/agent type checker (2026-09-01): config in
+  `pyproject.toml` `[tool.pyright]`, venv-aware, not run in CI. `_core.pyi`
+  declares the `def_prop_rw` parameter properties it previously omitted,
+  since `__init__.py` reads them off the `_core` classes; `__init__.py`
+  disables `reportIncompatibleMethodOverride` file-wide because pyright
+  rejects assigned-property overrides regardless of type.
 - Python-level parameter validation in `__init__.py` is retained for UX
   consistency (clean `ValueError`s) only — its original v1.x motivation
   (Homebrew LLVM vs AppleClang ABI mismatch) stopped applying in v2.0,

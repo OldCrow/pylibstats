@@ -3,6 +3,12 @@
 SIMD-accelerated statistical distributions with NumPy integration.
 """
 
+# pyright: reportIncompatibleMethodOverride=false
+# The wrapper classes below override _core's nanobind parameter properties
+# with `name = _validated_prop(...)` class attributes. pyright rejects any
+# non-decorator override of a property, whatever its type, so the rule is
+# off for this module only. Consumers type-check against __init__.pyi.
+
 import math
 
 import numpy as np

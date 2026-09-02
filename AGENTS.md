@@ -228,6 +228,18 @@ ruff check src/pylibstats tests examples
 ruff format src/pylibstats tests examples   # not yet applied repo-wide; see PLAN.md
 ```
 
+**Type checking**: pyright via the editor/agent language server only, not
+CI. `[tool.pyright]` in `pyproject.toml` points it at `.venv` so `numpy`
+and the editable install resolve, and silences the "no source" warning for
+the compiled `_core` module. `_core.pyi` must declare every `def_prop_rw`
+parameter property: `__init__.py` reads the nanobind descriptors off the
+`_core` classes to build its validated wrappers, so an undeclared property
+is a pyright error at each use site. `__init__.py` carries a file-level
+`# pyright: reportIncompatibleMethodOverride=false` because pyright rejects
+`name = _validated_prop(...)` as an override of a property regardless of
+type; consumers type-check against `__init__.pyi`, not the source.
+Baseline: `pyright src/pylibstats` reports 0 errors.
+
 **C++ binding layer** (`_core.cpp`, `_common.h`): its own cppcheck
 invocation, `scripts/lint-cpp.sh` — not a copy of libstats' own CI
 cppcheck, because (a) `_common.h` is a header and needs `--language=c++`
