@@ -36,6 +36,8 @@ inline nb::object vec_to_numpy(std::vector<double>&& vec) {
         delete static_cast<std::vector<double>*>(p);
     });
     const size_t n = owned->size();
+    // cppcheck-suppress memleak // false positive: `deleter` owns `owned`; older
+    // cppcheck (e.g. Ubuntu 24.04's) cannot see through the capsule transfer
     return nb::cast(
         nb::ndarray<nb::numpy, double, nb::ndim<1>>(owned->data(), {n}, deleter),
         nb::rv_policy::move);
