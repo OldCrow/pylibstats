@@ -172,45 +172,41 @@ python -m pytest tests -q
 
 ### Windows (MSVC)
 
-- Visual Studio 2022 (Build Tools or full IDE) is required as the C++ compiler. Install from https://aka.ms/vs/17/release/vs_buildtools.exe, `winget install Microsoft.VisualStudio.2022.BuildTools`, or `choco install visualstudio2022buildtools`.
-- Use the VS 2022 x64 generator for reproducible MSVC builds (`-Ccmake.define.CMAKE_GENERATOR="Visual Studio 17 2022"`).
-- If using `libstats_DIR`, the referenced `libstats` install must be built with compatible MSVC/x64 settings.
+- **Minimum toolchain**: Visual Studio 2022 (17.x) or later with the C++
+  desktop workload — any MSVC toolset with full C++20 support. Verified
+  through VS 2026 (v18, MSVC 14.5x). Build Tools or a full IDE edition both
+  work.
+- **Do not pin a generator locally.** CMake's default generator on Windows
+  auto-selects the newest installed Visual Studio, and a hard-coded
+  `CMAKE_GENERATOR="Visual Studio 17 2022"` breaks the moment VS upgrades
+  in place (a 2022→2026 upgrade leaves an empty `2022\` directory behind).
+  Toolset reproducibility belongs to CI, where the runner image pins it.
+  Pass an explicit `-Ccmake.define.CMAKE_GENERATOR="Visual Studio NN YYYY"`
+  only to troubleshoot generator selection itself.
+- If using `libstats_DIR`, the referenced `libstats` install must be built
+  with compatible MSVC/x64 settings.
 
 ```powershell
-python -m pip install -e ".[test]" `
-  -Ccmake.define.CMAKE_GENERATOR="Visual Studio 17 2022" `
-  -Ccmake.define.CMAKE_GENERATOR_PLATFORM=x64 `
-  -Ccmake.build-type=Release
+python -m pip install -e ".[test]" -Ccmake.build-type=Release
 python -m pytest tests -q
 ```
 
 #### Windows toolchain setup
 
-> **Windows tool paths vary** by installation method (direct installer, `winget`, `chocolatey`, Microsoft Store, etc.). The paths below are common defaults — adjust for your installation. VS Build Tools and full VS editions use different default directories.
-
-Activate the MSVC toolchain once per PowerShell session before building:
-
-```powershell
-# Default path for VS 2022 Build Tools. For full VS (Community/Professional/Enterprise),
-# replace "BuildTools" with your edition under "C:\Program Files\Microsoft Visual Studio\2022\".
-$vcvars = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-# Auto-detect any edition instead:
-# $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath
-# $vcvars = "$vsPath\VC\Auxiliary\Build\vcvars64.bat"
-$envVars = cmd /c "`"$vcvars`" > nul && set"
-foreach ($line in $envVars) {
-    if ($line -match "^([^=]+)=(.*)$") {
-        [System.Environment]::SetEnvironmentVariable($Matches[1], $Matches[2], 'Process')
-    }
-}
-```
+No per-session activation is needed: the Visual Studio CMake generator
+locates its own toolchain, so `vcvars64.bat` activation is only required
+for non-VS generators (e.g. Ninja) or for running `cl.exe` directly.
 
 **One-time setup:**
-- Visual Studio 2022 Build Tools (not full IDE) is sufficient. Install from https://aka.ms/vs/17/release/vs_buildtools.exe, `winget install Microsoft.VisualStudio.2022.BuildTools`, or `choco install visualstudio2022buildtools`.
-  - Build Tools default path: `C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\`
-  - Full VS default path: `C:\Program Files\Microsoft Visual Studio\2022\{edition}\`
+- Visual Studio Build Tools (not full IDE) is sufficient: `winget install
+  Microsoft.VisualStudio.2022.BuildTools` (or newer), `choco install
+  visualstudio2022buildtools`, or the installer from
+  https://visualstudio.microsoft.com/downloads/. Any 2022-or-later
+  edition works; paths vary by version and edition (e.g.
+  `C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\`,
+  `C:\Program Files\Microsoft Visual Studio\18\Community\`).
 - **Smart App Control must be Off** (Windows Security → App & Browser Control → SAC settings). SAC blocks locally compiled executables and cannot be re-enabled without a Windows reset.
-- CMake ≥ 3.25: https://cmake.org/download/, `winget install Kitware.CMake`, or `choco install cmake`.
+- CMake ≥ 3.25: https://cmake.org/download/, `winget install Kitware.CMake`, or `choco install cmake`. (Generator support for a new VS major version needs a correspondingly new CMake — VS 2026 needs CMake ≥ 4.1.)
 
 ## Coding Conventions
 
