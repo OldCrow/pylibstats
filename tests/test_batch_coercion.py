@@ -23,6 +23,7 @@ def g():
 # Scalar coercion
 # ---------------------------------------------------------------------------
 
+
 class TestScalarCoercion:
     def test_int_scalar_pdf(self, g):
         assert g.pdf(0) == pytest.approx(g.pdf(0.0))
@@ -46,6 +47,7 @@ class TestScalarCoercion:
 # ---------------------------------------------------------------------------
 # Batch array coercion
 # ---------------------------------------------------------------------------
+
 
 class TestBatchIntArray:
     def test_int32_array_pdf(self, g):
@@ -101,21 +103,21 @@ class TestBatchStridedArray:
         # Every other element: not C-contiguous
         x_full = np.array([-2.0, 99.0, -1.0, 99.0, 0.0, 99.0, 1.0, 99.0, 2.0, 99.0])
         x_strided = x_full[::2]  # stride-2 view, not contiguous
-        assert not x_strided.flags['C_CONTIGUOUS']
+        assert not x_strided.flags["C_CONTIGUOUS"]
         x_contig = np.ascontiguousarray(x_strided, dtype=np.float64)
         np.testing.assert_allclose(g.pdf(x_strided), g.pdf(x_contig))
 
     def test_strided_cdf(self, g):
         x_full = np.linspace(-3.0, 3.0, 20)
         x_strided = x_full[::3]
-        assert not x_strided.flags['C_CONTIGUOUS'] or x_strided.strides[0] != x_strided.itemsize
+        assert not x_strided.flags["C_CONTIGUOUS"] or x_strided.strides[0] != x_strided.itemsize
         x_contig = np.ascontiguousarray(x_strided)
         np.testing.assert_allclose(g.cdf(x_strided), g.cdf(x_contig))
 
     def test_strided_ppf(self, g):
         p_full = np.linspace(0.1, 0.9, 20)
         p_strided = p_full[::3]
-        assert not p_strided.flags['C_CONTIGUOUS'] or p_strided.strides[0] != p_strided.itemsize
+        assert not p_strided.flags["C_CONTIGUOUS"] or p_strided.strides[0] != p_strided.itemsize
         p_contig = np.ascontiguousarray(p_strided)
         np.testing.assert_allclose(g.ppf(p_strided), g.ppf(p_contig))
 
@@ -124,18 +126,22 @@ class TestBatchStridedArray:
 # Multi-distribution spot check (coercion installed on all 19 classes)
 # ---------------------------------------------------------------------------
 
+
 class TestAllDistributionsIntArray:
     """Spot-check that the coercion loop ran for every distribution."""
 
-    @pytest.mark.parametrize("dist,x", [
-        (pylibstats.Exponential(lam=1.0), np.array([0, 1, 2], dtype=np.int32)),
-        (pylibstats.Gamma(alpha=2.0, beta=1.0), np.array([1, 2, 3], dtype=np.int32)),
-        (pylibstats.Poisson(lam=3.0), np.array([0, 1, 2, 3], dtype=np.int32)),
-        (pylibstats.Beta(alpha=2.0, beta=2.0), np.array([0, 1], dtype=np.int32)),
-        (pylibstats.Weibull(shape=2.0, scale=1.0), np.array([1, 2, 3], dtype=np.int32)),
-        (pylibstats.Laplace(mu=0.0, b=1.0), np.array([-1, 0, 1], dtype=np.int32)),
-        (pylibstats.Cauchy(x0=0.0, gamma=1.0), np.array([-1, 0, 1], dtype=np.int32)),
-    ])
+    @pytest.mark.parametrize(
+        "dist,x",
+        [
+            (pylibstats.Exponential(lam=1.0), np.array([0, 1, 2], dtype=np.int32)),
+            (pylibstats.Gamma(alpha=2.0, beta=1.0), np.array([1, 2, 3], dtype=np.int32)),
+            (pylibstats.Poisson(lam=3.0), np.array([0, 1, 2, 3], dtype=np.int32)),
+            (pylibstats.Beta(alpha=2.0, beta=2.0), np.array([0, 1], dtype=np.int32)),
+            (pylibstats.Weibull(shape=2.0, scale=1.0), np.array([1, 2, 3], dtype=np.int32)),
+            (pylibstats.Laplace(mu=0.0, b=1.0), np.array([-1, 0, 1], dtype=np.int32)),
+            (pylibstats.Cauchy(x0=0.0, gamma=1.0), np.array([-1, 0, 1], dtype=np.int32)),
+        ],
+    )
     def test_int_array_accepted(self, dist, x):
         x_flt = x.astype(np.float64)
         np.testing.assert_allclose(dist.pdf(x), dist.pdf(x_flt))
@@ -162,13 +168,16 @@ class TestPpfValidation:
         with pytest.raises(ValueError, match="Probability"):
             g.ppf(p)
 
-    @pytest.mark.parametrize("p", [
-        [-0.1, 0.5],
-        [0.5, 1.1],
-        [0.25, np.nan],
-        np.array([0.25, np.inf]),
-        np.array([0.25, -np.inf]),
-    ])
+    @pytest.mark.parametrize(
+        "p",
+        [
+            [-0.1, 0.5],
+            [0.5, 1.1],
+            [0.25, np.nan],
+            np.array([0.25, np.inf]),
+            np.array([0.25, -np.inf]),
+        ],
+    )
     def test_batch_invalid_probability_raises_value_error(self, g, p):
         with pytest.raises(ValueError, match="Probability"):
             g.ppf(p)

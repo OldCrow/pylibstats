@@ -76,8 +76,9 @@ class TestNegativeBinomialBatch:
 
     def test_batch_matches_scalar(self, negative_binomial):
         x = np.array([0.0, 1.0, 2.0, 5.0])
-        np.testing.assert_allclose(negative_binomial.pdf(x),
-                                   [negative_binomial.pdf(v) for v in x], rtol=1e-12)
+        np.testing.assert_allclose(
+            negative_binomial.pdf(x), [negative_binomial.pdf(v) for v in x], rtol=1e-12
+        )
 
 
 class TestNegativeBinomialProperties:

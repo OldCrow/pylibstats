@@ -60,8 +60,7 @@ class TestLogNormalBatch:
 
     def test_batch_matches_scalar(self, lognormal):
         x = np.array([0.5, 1.0, 2.0, 3.0])
-        np.testing.assert_allclose(lognormal.pdf(x),
-                                   [lognormal.pdf(v) for v in x], rtol=1e-12)
+        np.testing.assert_allclose(lognormal.pdf(x), [lognormal.pdf(v) for v in x], rtol=1e-12)
 
 
 class TestLogNormalProperties:

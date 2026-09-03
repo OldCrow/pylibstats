@@ -4,8 +4,6 @@ All distribution classes validate parameters in Python before delegating
 to the native C++ extension.  Invalid parameters raise ``ValueError``.
 """
 
-
-
 from pylibstats import _core
 
 # ---------------------------------------------------------------------------

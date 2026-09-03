@@ -51,8 +51,7 @@ class TestWeibullBatch:
 
     def test_batch_matches_scalar(self, weibull):
         x = np.array([0.5, 1.0, 2.0])
-        np.testing.assert_allclose(weibull.pdf(x),
-                                   [weibull.pdf(v) for v in x], rtol=1e-12)
+        np.testing.assert_allclose(weibull.pdf(x), [weibull.pdf(v) for v in x], rtol=1e-12)
 
 
 class TestWeibullProperties:

@@ -24,6 +24,7 @@ from . import _core
 # was removed in v2.0; this layer is now retained purely for UX consistency.
 # ---------------------------------------------------------------------------
 
+
 def _require_finite(value, name):
     """Raise ValueError if *value* is NaN or infinite."""
     if not math.isfinite(value):
@@ -56,6 +57,7 @@ def _coerce_batch_input(x):
     if arr.ndim == 0:
         return float(arr)
     return np.ascontiguousarray(arr)
+
 
 def _coerce_probability_input(p):
     """Normalize and validate ppf probability input.
@@ -127,6 +129,7 @@ def _validated_prop(parent_prop, validator, param_name, doc=None):
 # Validated wrapper classes
 # ---------------------------------------------------------------------------
 
+
 class Gaussian(_core.Gaussian):
     """Gaussian (normal) distribution N(mu, sigma).
 
@@ -150,10 +153,13 @@ class Gaussian(_core.Gaussian):
         _require_positive_finite(sigma, "Standard deviation")
         super().__init__(mu=mu, sigma=sigma)
 
-    mu = _validated_prop(_core.Gaussian.mu, _require_finite, "Mean",
-                         "Mean parameter μ.")
-    sigma = _validated_prop(_core.Gaussian.sigma, _require_positive_finite,
-                            "Standard deviation", "Standard deviation parameter σ.")
+    mu = _validated_prop(_core.Gaussian.mu, _require_finite, "Mean", "Mean parameter μ.")
+    sigma = _validated_prop(
+        _core.Gaussian.sigma,
+        _require_positive_finite,
+        "Standard deviation",
+        "Standard deviation parameter σ.",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -179,8 +185,12 @@ class Exponential(_core.Exponential):
         _require_positive_finite(lam, "Lambda (rate parameter)")
         super().__init__(lam=lam)
 
-    lam = _validated_prop(_core.Exponential.lam, _require_positive_finite,
-                          "Lambda (rate parameter)", "Rate parameter λ.")
+    lam = _validated_prop(
+        _core.Exponential.lam,
+        _require_positive_finite,
+        "Lambda (rate parameter)",
+        "Rate parameter λ.",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -208,9 +218,7 @@ class Uniform(_core.Uniform):
         _require_finite(a, "Lower bound (a)")
         _require_finite(b, "Upper bound (b)")
         if a >= b:
-            raise ValueError(
-                "Upper bound (b) must be strictly greater than lower bound (a)"
-            )
+            raise ValueError("Upper bound (b) must be strictly greater than lower bound (a)")
         super().__init__(a=a, b=b)
 
     @property
@@ -222,9 +230,7 @@ class Uniform(_core.Uniform):
     def a(self, value):
         _require_finite(value, "Lower bound (a)")
         if value >= self.b:
-            raise ValueError(
-                "Lower bound (a) must be strictly less than upper bound (b)"
-            )
+            raise ValueError("Lower bound (a) must be strictly less than upper bound (b)")
         _core.Uniform.a.__set__(self, value)
 
     @property
@@ -236,9 +242,7 @@ class Uniform(_core.Uniform):
     def b(self, value):
         _require_finite(value, "Upper bound (b)")
         if value <= self.a:
-            raise ValueError(
-                "Upper bound (b) must be strictly greater than lower bound (a)"
-            )
+            raise ValueError("Upper bound (b) must be strictly greater than lower bound (a)")
         _core.Uniform.b.__set__(self, value)
 
     def fit(self, data):
@@ -265,8 +269,9 @@ class Poisson(_core.Poisson):
         _require_positive_finite(lam, "Lambda (rate parameter)")
         super().__init__(lam=lam)
 
-    lam = _validated_prop(_core.Poisson.lam, _require_positive_finite,
-                          "Lambda (rate parameter)", "Rate parameter λ.")
+    lam = _validated_prop(
+        _core.Poisson.lam, _require_positive_finite, "Lambda (rate parameter)", "Rate parameter λ."
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -293,9 +298,7 @@ class DiscreteUniform(_core.DiscreteUniform):
 
     def __init__(self, a=0, b=1):
         if a > b:
-            raise ValueError(
-                "Upper bound (b) must be >= lower bound (a)"
-            )
+            raise ValueError("Upper bound (b) must be >= lower bound (a)")
         super().__init__(a=a, b=b)
 
     @property
@@ -306,9 +309,7 @@ class DiscreteUniform(_core.DiscreteUniform):
     @a.setter
     def a(self, value):
         if value > self.b:
-            raise ValueError(
-                "Lower bound (a) must be <= upper bound (b)"
-            )
+            raise ValueError("Lower bound (a) must be <= upper bound (b)")
         _core.DiscreteUniform.a.__set__(self, value)
 
     @property
@@ -319,9 +320,7 @@ class DiscreteUniform(_core.DiscreteUniform):
     @b.setter
     def b(self, value):
         if value < self.a:
-            raise ValueError(
-                "Upper bound (b) must be >= lower bound (a)"
-            )
+            raise ValueError("Upper bound (b) must be >= lower bound (a)")
         _core.DiscreteUniform.b.__set__(self, value)
 
     def fit(self, data):
@@ -351,10 +350,12 @@ class Gamma(_core.Gamma):
         _require_positive_finite(beta, "Beta (rate parameter)")
         super().__init__(alpha=alpha, beta=beta)
 
-    alpha = _validated_prop(_core.Gamma.alpha, _require_positive_finite,
-                            "Alpha (shape parameter)", "Shape parameter α.")
-    beta = _validated_prop(_core.Gamma.beta, _require_positive_finite,
-                           "Beta (rate parameter)", "Rate parameter β.")
+    alpha = _validated_prop(
+        _core.Gamma.alpha, _require_positive_finite, "Alpha (shape parameter)", "Shape parameter α."
+    )
+    beta = _validated_prop(
+        _core.Gamma.beta, _require_positive_finite, "Beta (rate parameter)", "Rate parameter β."
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -383,10 +384,12 @@ class Beta(_core.Beta):
         _require_positive_finite(beta, "Beta (shape parameter)")
         super().__init__(alpha=alpha, beta=beta)
 
-    alpha = _validated_prop(_core.Beta.alpha, _require_positive_finite,
-                            "Alpha (shape parameter)", "Shape parameter α.")
-    beta = _validated_prop(_core.Beta.beta, _require_positive_finite,
-                           "Beta (shape parameter)", "Shape parameter β.")
+    alpha = _validated_prop(
+        _core.Beta.alpha, _require_positive_finite, "Alpha (shape parameter)", "Shape parameter α."
+    )
+    beta = _validated_prop(
+        _core.Beta.beta, _require_positive_finite, "Beta (shape parameter)", "Shape parameter β."
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -412,8 +415,12 @@ class ChiSquared(_core.ChiSquared):
         _require_positive_finite(k, "Degrees of freedom (k)")
         super().__init__(k=k)
 
-    k = _validated_prop(_core.ChiSquared.k, _require_positive_finite,
-                        "Degrees of freedom (k)", "Degrees of freedom k.")
+    k = _validated_prop(
+        _core.ChiSquared.k,
+        _require_positive_finite,
+        "Degrees of freedom (k)",
+        "Degrees of freedom k.",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -439,8 +446,12 @@ class StudentT(_core.StudentT):
         _require_positive_finite(nu, "Degrees of freedom (nu)")
         super().__init__(nu=nu)
 
-    nu = _validated_prop(_core.StudentT.nu, _require_positive_finite,
-                         "Degrees of freedom (nu)", "Degrees of freedom ν.")
+    nu = _validated_prop(
+        _core.StudentT.nu,
+        _require_positive_finite,
+        "Degrees of freedom (nu)",
+        "Degrees of freedom ν.",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -469,10 +480,18 @@ class LogNormal(_core.LogNormal):
         _require_positive_finite(sigma, "Scale parameter (sigma)")
         super().__init__(mu=mu, sigma=sigma)
 
-    mu = _validated_prop(_core.LogNormal.mu, _require_finite,
-                         "Location parameter (mu)", "Location parameter \u03bc (log-mean).")
-    sigma = _validated_prop(_core.LogNormal.sigma, _require_positive_finite,
-                            "Scale parameter (sigma)", "Scale parameter \u03c3 (log-stddev).")
+    mu = _validated_prop(
+        _core.LogNormal.mu,
+        _require_finite,
+        "Location parameter (mu)",
+        "Location parameter \u03bc (log-mean).",
+    )
+    sigma = _validated_prop(
+        _core.LogNormal.sigma,
+        _require_positive_finite,
+        "Scale parameter (sigma)",
+        "Scale parameter \u03c3 (log-stddev).",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -501,10 +520,18 @@ class Pareto(_core.Pareto):
         _require_positive_finite(alpha, "Shape parameter (alpha)")
         super().__init__(scale=scale, alpha=alpha)
 
-    scale = _validated_prop(_core.Pareto.scale, _require_positive_finite,
-                            "Scale parameter (scale)", "Minimum value x_m.")
-    alpha = _validated_prop(_core.Pareto.alpha, _require_positive_finite,
-                            "Shape parameter (alpha)", "Shape parameter \u03b1 (tail index).")
+    scale = _validated_prop(
+        _core.Pareto.scale,
+        _require_positive_finite,
+        "Scale parameter (scale)",
+        "Minimum value x_m.",
+    )
+    alpha = _validated_prop(
+        _core.Pareto.alpha,
+        _require_positive_finite,
+        "Shape parameter (alpha)",
+        "Shape parameter \u03b1 (tail index).",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -533,10 +560,18 @@ class Weibull(_core.Weibull):
         _require_positive_finite(scale, "Scale parameter (scale)")
         super().__init__(shape=shape, scale=scale)
 
-    shape = _validated_prop(_core.Weibull.shape, _require_positive_finite,
-                            "Shape parameter (shape)", "Shape parameter k.")
-    scale = _validated_prop(_core.Weibull.scale, _require_positive_finite,
-                            "Scale parameter (scale)", "Scale parameter \u03bb.")
+    shape = _validated_prop(
+        _core.Weibull.shape,
+        _require_positive_finite,
+        "Shape parameter (shape)",
+        "Shape parameter k.",
+    )
+    scale = _validated_prop(
+        _core.Weibull.scale,
+        _require_positive_finite,
+        "Scale parameter (scale)",
+        "Scale parameter \u03bb.",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -562,8 +597,12 @@ class Rayleigh(_core.Rayleigh):
         _require_positive_finite(sigma, "Scale parameter (sigma)")
         super().__init__(sigma=sigma)
 
-    sigma = _validated_prop(_core.Rayleigh.sigma, _require_positive_finite,
-                            "Scale parameter (sigma)", "Scale parameter \u03c3.")
+    sigma = _validated_prop(
+        _core.Rayleigh.sigma,
+        _require_positive_finite,
+        "Scale parameter (sigma)",
+        "Scale parameter \u03c3.",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -592,11 +631,18 @@ class VonMises(_core.VonMises):
         _require_non_negative_finite(kappa, "Concentration (kappa)")
         super().__init__(mu=mu, kappa=kappa)
 
-    mu = _validated_prop(_core.VonMises.mu, _require_finite,
-                         "Mean direction (mu)",
-                         "Mean direction \u03bc (wrapped to (-\u03c0, \u03c0]).")
-    kappa = _validated_prop(_core.VonMises.kappa, _require_non_negative_finite,
-                            "Concentration (kappa)", "Concentration \u03ba (\u2265 0).")
+    mu = _validated_prop(
+        _core.VonMises.mu,
+        _require_finite,
+        "Mean direction (mu)",
+        "Mean direction \u03bc (wrapped to (-\u03c0, \u03c0]).",
+    )
+    kappa = _validated_prop(
+        _core.VonMises.kappa,
+        _require_non_negative_finite,
+        "Concentration (kappa)",
+        "Concentration \u03ba (\u2265 0).",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -637,8 +683,12 @@ class Binomial(_core.Binomial):
             raise ValueError("n must be a positive integer")
         _core.Binomial.n.__set__(self, int(value))
 
-    p = _validated_prop(_core.Binomial.p, _require_probability,
-                        "Probability (p)", "Success probability p (in [0, 1]).")
+    p = _validated_prop(
+        _core.Binomial.p,
+        _require_probability,
+        "Probability (p)",
+        "Success probability p (in [0, 1]).",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -667,10 +717,18 @@ class NegativeBinomial(_core.NegativeBinomial):
         _require_positive_probability(p, "Probability (p)")
         super().__init__(r=r, p=p)
 
-    r = _validated_prop(_core.NegativeBinomial.r, _require_positive_finite,
-                        "Success count (r)", "Number of successes r (positive, real-valued).")
-    p = _validated_prop(_core.NegativeBinomial.p, _require_positive_probability,
-                        "Probability (p)", "Success probability p (in (0, 1]).")
+    r = _validated_prop(
+        _core.NegativeBinomial.r,
+        _require_positive_finite,
+        "Success count (r)",
+        "Number of successes r (positive, real-valued).",
+    )
+    p = _validated_prop(
+        _core.NegativeBinomial.p,
+        _require_positive_probability,
+        "Probability (p)",
+        "Success probability p (in (0, 1]).",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -699,8 +757,12 @@ class Geometric(_core.Geometric):
         _require_positive_probability(p, "Probability (p)")
         super().__init__(p=p)
 
-    p = _validated_prop(_core.Geometric.p, _require_positive_probability,
-                        "Probability (p)", "Success probability p (in (0, 1]).")
+    p = _validated_prop(
+        _core.Geometric.p,
+        _require_positive_probability,
+        "Probability (p)",
+        "Success probability p (in (0, 1]).",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -729,10 +791,12 @@ class Laplace(_core.Laplace):
         _require_positive_finite(b, "Scale parameter (b)")
         super().__init__(mu=mu, b=b)
 
-    mu = _validated_prop(_core.Laplace.mu, _require_finite,
-                         "Location parameter (mu)", "Location parameter \u03bc.")
-    b = _validated_prop(_core.Laplace.b, _require_positive_finite,
-                        "Scale parameter (b)", "Scale parameter b.")
+    mu = _validated_prop(
+        _core.Laplace.mu, _require_finite, "Location parameter (mu)", "Location parameter \u03bc."
+    )
+    b = _validated_prop(
+        _core.Laplace.b, _require_positive_finite, "Scale parameter (b)", "Scale parameter b."
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -763,10 +827,15 @@ class Cauchy(_core.Cauchy):
         _require_positive_finite(gamma, "Scale parameter (gamma)")
         super().__init__(x0=x0, gamma=gamma)
 
-    x0 = _validated_prop(_core.Cauchy.x0, _require_finite,
-                         "Location parameter (x0)", "Location parameter x\u2080.")
-    gamma = _validated_prop(_core.Cauchy.gamma, _require_positive_finite,
-                            "Scale parameter (gamma)", "Scale parameter \u03b3.")
+    x0 = _validated_prop(
+        _core.Cauchy.x0, _require_finite, "Location parameter (x0)", "Location parameter x\u2080."
+    )
+    gamma = _validated_prop(
+        _core.Cauchy.gamma,
+        _require_positive_finite,
+        "Scale parameter (gamma)",
+        "Scale parameter \u03b3.",
+    )
 
     def fit(self, data):
         super().fit(_validate_fit_data(data))
@@ -787,18 +856,20 @@ Normal = Gaussian
 # to a C-contiguous float64 ndarray (batch C++ overload).
 # ---------------------------------------------------------------------------
 
+
 def _install_batch_coercion(cls, core_cls):
     """Inject pdf / log_pdf / cdf / ppf coercion wrappers into *cls*."""
-    for _name in ('pdf', 'log_pdf', 'cdf', 'ppf'):
+    for _name in ("pdf", "log_pdf", "cdf", "ppf"):
         _m = getattr(core_cls, _name)
 
         def _make(m, method_name):
             def _wrapper(self, x):
-                if method_name == 'ppf':
+                if method_name == "ppf":
                     return m(self, _coerce_probability_input(x))
                 return m(self, _coerce_batch_input(x))
+
             _wrapper.__name__ = method_name
-            _wrapper.__qualname__ = f'{cls.__qualname__}.{method_name}'
+            _wrapper.__qualname__ = f"{cls.__qualname__}.{method_name}"
             return _wrapper
 
         setattr(cls, _name, _make(_m, _name))

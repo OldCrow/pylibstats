@@ -64,6 +64,7 @@ class TestGammaProperties:
     def test_skewness(self, gamma_dist):
         # skewness = 2/sqrt(alpha) = 2/sqrt(2)
         import math
+
         assert gamma_dist.skewness == pytest.approx(2.0 / math.sqrt(2.0), rel=1e-8)
 
     def test_support(self, gamma_dist):

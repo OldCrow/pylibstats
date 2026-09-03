@@ -56,8 +56,7 @@ class TestParetoBatch:
 
     def test_batch_matches_scalar(self, pareto):
         x = np.array([1.0, 2.0, 5.0, 10.0])
-        np.testing.assert_allclose(pareto.pdf(x),
-                                   [pareto.pdf(v) for v in x], rtol=1e-12)
+        np.testing.assert_allclose(pareto.pdf(x), [pareto.pdf(v) for v in x], rtol=1e-12)
 
 
 class TestParetoProperties:

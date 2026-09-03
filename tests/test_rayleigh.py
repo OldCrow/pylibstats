@@ -50,8 +50,7 @@ class TestRayleighBatch:
 
     def test_batch_matches_scalar(self, rayleigh):
         x = np.array([0.5, 1.0, 2.0, 3.0])
-        np.testing.assert_allclose(rayleigh.pdf(x),
-                                   [rayleigh.pdf(v) for v in x], rtol=1e-12)
+        np.testing.assert_allclose(rayleigh.pdf(x), [rayleigh.pdf(v) for v in x], rtol=1e-12)
 
 
 class TestRayleighProperties:

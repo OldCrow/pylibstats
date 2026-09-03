@@ -35,6 +35,7 @@ class TestBinomialConstruction:
     def test_numpy_int64_accepted(self):
         # S-2: np.int64 (and other NumPy integer scalars) must be accepted.
         import numpy as np
+
         n = np.int64(20)
         d = pylibstats.Binomial(n, 0.4)
         assert d.n == 20
@@ -42,6 +43,7 @@ class TestBinomialConstruction:
     def test_numpy_int_setter_accepted(self):
         # S-2: n setter must accept NumPy integer scalars.
         import numpy as np
+
         d = pylibstats.Binomial(10, 0.5)
         d.n = np.int32(15)
         assert d.n == 15
@@ -81,6 +83,7 @@ class TestBinomialScalar:
 
     def test_log_pdf_consistency(self, binomial):
         import math
+
         pmf5 = binomial.pdf(5.0)
         assert binomial.log_pdf(5.0) == pytest.approx(math.log(pmf5), rel=1e-10)
 
@@ -96,8 +99,7 @@ class TestBinomialBatch:
 
     def test_batch_matches_scalar(self, binomial):
         x = np.array([0.0, 3.0, 5.0, 8.0, 10.0])
-        np.testing.assert_allclose(binomial.pdf(x),
-                                   [binomial.pdf(v) for v in x], rtol=1e-12)
+        np.testing.assert_allclose(binomial.pdf(x), [binomial.pdf(v) for v in x], rtol=1e-12)
 
     def test_batch_pmf_sums_to_one(self, binomial):
         x = np.arange(0, 11, dtype=float)

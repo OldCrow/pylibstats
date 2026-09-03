@@ -15,6 +15,7 @@ import pylibstats
 # Setter validation
 # ---------------------------------------------------------------------------
 
+
 class TestGaussianSetterValidation:
     def test_sigma_rejects_zero(self):
         g = pylibstats.Gaussian()
@@ -228,6 +229,7 @@ class TestCauchySetterValidation:
 # ---------------------------------------------------------------------------
 
 # Use Gaussian as representative; the validation path is shared.
+
 
 class TestFitValidation:
     def test_empty_array_raises(self):

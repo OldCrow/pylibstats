@@ -1,6 +1,5 @@
 """Basic pylibstats usage examples."""
 
-
 import numpy as np
 
 import pylibstats
@@ -23,8 +22,19 @@ neg_binom = pylibstats.NegativeBinomial(r=2.0, p=0.5)
 normal = pylibstats.Normal(mu=100.0, sigma=15.0)
 
 print("── All 16 distributions ──")
-for d in [gaussian, gamma, beta, poisson, lognormal, pareto,
-          weibull, rayleigh, von_mises, binomial, neg_binom]:
+for d in [
+    gaussian,
+    gamma,
+    beta,
+    poisson,
+    lognormal,
+    pareto,
+    weibull,
+    rayleigh,
+    von_mises,
+    binomial,
+    neg_binom,
+]:
     print(f"  {d!r}")
 
 # ── Scalar operations ────────────────────────────────────────────────────────
@@ -59,20 +69,22 @@ print(f"  cdf = {cdf_values}")
 
 print("\n── Moment properties ──")
 for name, dist in [
-    ("Gaussian(0,1)",   gaussian),
-    ("Gamma(2,0.5)",    gamma),
-    ("Beta(2,5)",       beta),
-    ("Poisson(4)",      poisson),
-    ("LogNormal(0,1)",  lognormal),
-    ("Pareto(1,2)",     pareto),
-    ("Weibull(2,1)",    weibull),
-    ("Rayleigh(1)",     rayleigh),
-    ("VonMises(0,2)",   von_mises),
+    ("Gaussian(0,1)", gaussian),
+    ("Gamma(2,0.5)", gamma),
+    ("Beta(2,5)", beta),
+    ("Poisson(4)", poisson),
+    ("LogNormal(0,1)", lognormal),
+    ("Pareto(1,2)", pareto),
+    ("Weibull(2,1)", weibull),
+    ("Rayleigh(1)", rayleigh),
+    ("VonMises(0,2)", von_mises),
     ("Binomial(10,0.5)", binomial),
     ("NegBinom(2,0.5)", neg_binom),
 ]:
-    print(f"  {name:20s}  mean={dist.mean:.4f}  var={dist.variance:.4f}  "
-          f"skew={dist.skewness:.4f}  kurt={dist.kurtosis:.4f}")
+    print(
+        f"  {name:20s}  mean={dist.mean:.4f}  var={dist.variance:.4f}  "
+        f"skew={dist.skewness:.4f}  kurt={dist.kurtosis:.4f}"
+    )
 
 # ── Sampling ─────────────────────────────────────────────────────────────────
 
@@ -81,8 +93,10 @@ print("\n── Sampling ──")
 print(f"  10,000 Gaussian samples: mean={samples.mean():.4f}, std={samples.std():.4f}")
 
 beta_samples = beta.sample(n=10_000, seed=42)
-print(f"  10,000 Beta(2,5) samples: mean={beta_samples.mean():.4f}, "
-      f"min={beta_samples.min():.4f}, max={beta_samples.max():.4f}")
+print(
+    f"  10,000 Beta(2,5) samples: mean={beta_samples.mean():.4f}, "
+    f"min={beta_samples.min():.4f}, max={beta_samples.max():.4f}"
+)
 
 # ── Fitting ──────────────────────────────────────────────────────────────────
 

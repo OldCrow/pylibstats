@@ -66,8 +66,7 @@ class TestVonMisesBatch:
 
     def test_batch_matches_scalar(self, von_mises):
         x = np.array([-1.0, 0.0, 1.0])
-        np.testing.assert_allclose(von_mises.pdf(x),
-                                   [von_mises.pdf(v) for v in x], rtol=1e-12)
+        np.testing.assert_allclose(von_mises.pdf(x), [von_mises.pdf(v) for v in x], rtol=1e-12)
 
 
 class TestVonMisesProperties:

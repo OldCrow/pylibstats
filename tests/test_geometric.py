@@ -95,7 +95,7 @@ class TestGeometricProperties:
     def test_variance_property(self, geometric):
         # Var[X] = (1-p)/p^2
         p = geometric.p
-        assert geometric.variance == pytest.approx((1 - p) / (p ** 2), rel=1e-10)
+        assert geometric.variance == pytest.approx((1 - p) / (p**2), rel=1e-10)
 
     def test_is_discrete(self, geometric):
         assert geometric.is_discrete

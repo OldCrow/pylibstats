@@ -93,7 +93,7 @@ class TestLaplaceProperties:
 
     def test_variance_property(self, laplace):
         # Var = 2*b^2
-        assert laplace.variance == pytest.approx(2.0 * laplace.b ** 2, rel=1e-10)
+        assert laplace.variance == pytest.approx(2.0 * laplace.b**2, rel=1e-10)
 
     def test_skewness_zero(self, laplace):
         assert laplace.skewness == pytest.approx(0.0, abs=1e-10)
