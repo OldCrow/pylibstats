@@ -50,7 +50,7 @@ session: `README.md` still said "v2.0.3" in the FetchContent build
 instructions; corrected to v2.0.4. No version-pin gap remains to defer.
 
 ## GitHub Synchronization [DERIVED]
-Last reconciled against live GitHub state: 2026-08-23.
+Last reconciled against live GitHub state: 2026-09-02.
 - GitHub is the collaborator-facing source for issues and milestones; this
   PLAN.md is the agent-facing durable project state. Keep both in sync.
 - When creating, closing, reopening, retitling, or moving a GitHub issue or
@@ -77,11 +77,10 @@ Last reconciled against live GitHub state: 2026-08-23.
   - #6 Decide whether to adopt mypy for the Python surface (filed 2026-07-14)
   - #7 Run deferred ruff format pass across src/pylibstats, tests, examples
     (filed 2026-07-14)
-  - #15 allowlist ships cp314t but `ci.yml` has no 3.14t row — resolved
-    in-tree 2026-08-16 (`73f7f49`, CI green with the new `3.14t` job);
-    still open on GitHub as of 2026-08-22, so closing it is the one step
-    left.
-- Closed issues: 1 as of 2026-08-22.
+- Closed issues: 2 as of 2026-09-02. (#15 — allowlist ships cp314t with
+  no 3.14t CI row — was resolved in-tree 2026-08-16 at `73f7f49` and
+  closed on GitHub 2026-08-22; the earlier note here claiming it was
+  still open was stale.)
 
 ## In Progress [OPEN]
 - (none currently tracked — populate as work starts).
@@ -226,9 +225,21 @@ upper-bound rule); this section stays as the incident record behind the
 rules.
 
 ## Next Steps
-1. #5: Decide when to wire `ruff check` and `scripts/lint-cpp.sh` into CI.
-2. #7: Run the deferred `ruff format` pass as its own reviewable change.
-3. #6: Decide whether to adopt mypy.
+Bindings catch-up track, decided 2026-09-02 (user delegated the
+catch-up-vs-widen call; catch-up chosen — the C++ fleet is at a natural
+pause after corvus v1.0.0, and clearing the tooling backlog now keeps
+the adoption-era sessions to pin bumps only). Format before CI wiring so
+a format check can go in green:
+1. #7: Run the deferred `ruff format` pass as its own reviewable change.
+2. #5: Wire `ruff check` + `scripts/lint-cpp.sh` into CI.
+- DEFERRED past the adoption round: #6 mypy (a decision + annotation
+  question; no drift cost to waiting).
+- Then the libstats v2.5.0 adoption-era pin bump: expect a MINOR
+  pylibstats bump, not a patch — the corvus swap changes numbers users
+  observe (the v2.2.0/0.5.0 Bessel precedent), so the release notes
+  carry the behavior change. No binding-surface change is expected from
+  v2.5.0 itself; v2.4.0/v2.6.0's new distributions will need new
+  bindings + hand-written stubs when they ship.
 
 ## Build-Stack Standardization (2026-07-23) [DERIVED]
 Cross-repo effort tracked in the fleet standards repo
