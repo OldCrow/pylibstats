@@ -225,7 +225,7 @@ in `pyproject.toml`. Scoped to `E`/`F`/`I`/`UP`/`B` — unlike pylibhmm, `B`
 (flake8-bugbear) is clean here and fully enabled, no deferral needed.
 ```bash
 ruff check src/pylibstats tests examples
-ruff format src/pylibstats tests examples   # not yet applied repo-wide; see PLAN.md
+ruff format src/pylibstats tests examples
 ```
 
 **Type checking**: pyright via the editor/agent language server only, not
@@ -263,7 +263,9 @@ Three workflows:
   cross-product: all three Python versions on Linux, oldest+newest only on
   macOS and Windows (the version axis rarely diverges by OS for a nanobind
   extension, and those runners cost 10x/2x Linux minutes). Plus a combined
-  ASan+UBSan job on Linux.
+  ASan+UBSan job on Linux, and a `lint` job (ruff check + format check,
+  `scripts/lint-cpp.sh` with libstats headers cloned at the pinned
+  `GIT_TAG` parsed from `CMakeLists.txt`).
 - `wheels.yml` — cibuildwheel (pinned), gated on `v*` tags and
   `workflow_dispatch`, never on PRs. Follows the fleet wheel contract
   ([CI House Style §9](https://github.com/OldCrow/standards/blob/main/CI-HOUSE-STYLE.md#9-wheel-builds-pylibhmm-pylibstats)),

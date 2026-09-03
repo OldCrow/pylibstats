@@ -68,6 +68,52 @@ jobs:
         run: pytest tests -v --tb=short
 
   # ---------------------------------------------------------------------------
+  # lint — ruff (check + format) and the C++ binding layer's cppcheck
+  # (GitHub issue #5).  One cheap Linux job; no extension build needed.
+  # ruff is pinned: an unpinned linter turns every ruff release into a
+  # potential red X on an unrelated push (same rationale as the
+  # cibuildwheel pin in wheels.yml) — bump it deliberately.
+  # lint-cpp.sh expects a ../libstats sibling checkout for headers, so
+  # clone the pinned tag parsed from CMakeLists.txt (the same GIT_TAG the
+  # pin-currency job checks — CMakeLists.txt stays the single source).
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint (ruff + cppcheck)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: ruff check and format
+        run: |
+          pip install ruff==0.16.5
+          ruff check src/pylibstats tests examples
+          ruff format --check src/pylibstats tests examples
+
+      - name: Clone libstats headers at the pinned tag
+        env:
+          LIBSTATS_REPO: https://github.com/OldCrow/libstats.git
+        run: |
+          set -euo pipefail
+          pin=$(grep -oE '^[[:space:]]*GIT_TAG[[:space:]]+v[^[:space:]]+' CMakeLists.txt \
+                | awk '{print $2}')
+          if [ -z "${pin}" ]; then
+            echo "::error::could not parse GIT_TAG from CMakeLists.txt"
+            exit 1
+          fi
+          git clone --depth 1 --branch "${pin}" "${LIBSTATS_REPO}" ../libstats
+
+      - name: cppcheck (binding layer)
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q cppcheck
+          bash scripts/lint-cpp.sh
+
+  # ---------------------------------------------------------------------------
   # ASan+UBSan run together in this one job (same runner, no extra cost),
   # mirroring pylibhmm's asan job. Linux/GCC only: macOS ASan for Python
   # extensions requires DYLD_INSERT_LIBRARIES and SIP workarounds.

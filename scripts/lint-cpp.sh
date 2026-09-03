@@ -13,8 +13,17 @@
 #      enforces (--error-exitcode=1) since it's new tooling for this repo's
 #      binding layer, not inherited from a stricter parent convention.
 #
-# No third-party-header suppression is needed here (verified 2026-07-14):
-# unlike pylibhmm, no findings were attributed to libstats' own headers.
+# Findings attributed to libstats' own headers (reached via -I) are libstats'
+# concern, not pylibstats': they are suppressed, matching pylibhmm's
+# convention. (The original 2026-07-14 setup found none and carried no
+# suppression; the v2.3.1 pin plus newer cppcheck releases surfaced 18 header
+# findings — all in libstats, zero in this repo's binding layer.) The glob
+# matches the `libstats/` directory all its headers are installed/included
+# under, which holds for every layout (sibling checkout, CI clone, installed
+# prefix, LIBSTATS_INCLUDE override) — an absolute-path glob would not: a
+# Windows drive-letter colon breaks cppcheck's id:file:line suppression
+# parsing. It cannot hit this repo's own files ("pylibstats" contains no
+# /libstats/ path segment).
 #
 # Usage:
 #   ./scripts/lint-cpp.sh
@@ -40,6 +49,7 @@ echo "==> Running cppcheck (src/pylibstats/_core.cpp, src/pylibstats/_common.h).
 
 cppcheck --enable=warning,style,performance,portability --error-exitcode=1 \
     --suppress=missingIncludeSystem --inline-suppr \
+    --suppress="*:*/libstats/*" \
     --std=c++20 --language=c++ \
     -I "$LIBSTATS_INCLUDE" -I "$REPO_ROOT/src/pylibstats" \
     "$REPO_ROOT/src/pylibstats/_core.cpp" "$REPO_ROOT/src/pylibstats/_common.h"
