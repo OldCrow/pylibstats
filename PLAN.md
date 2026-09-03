@@ -28,12 +28,23 @@
 - Python tooling: ruff adopted (`E`/`F`/`I`/`UP`/`B`), config in
   `pyproject.toml`. All five categories are clean here — no deferral
   needed (contrast with pylibhmm, where `B` was deferred for 5
-  blind-exception test findings).
+  blind-exception test findings). `ruff format` applied repo-wide
+  2026-09-02 (16 files, closed #7); check + format --check wired into
+  CI the same day (closed #5), ruff pinned 0.16.5 there.
 - C++ binding tooling: `scripts/lint-cpp.sh` — own cppcheck invocation
   (not a copy of libstats' CI cppcheck), requiring `--language=c++` for
   `_common.h`. Enforced (`--error-exitcode=1`) even though libstats' own
   cppcheck is informational-only, since this is new tooling for this
   repo, not inherited from a stricter parent. Verified clean 2026-07-14.
+  Wired into CI 2026-09-02 (lint job clones libstats headers at the
+  GIT_TAG parsed from CMakeLists.txt). Two suppressions added the same
+  day: libstats-header findings are suppressed by a `libstats/`
+  path-segment glob (18 appeared since the July baseline — pin and
+  cppcheck both moved; all libstats' concern, none in the binding
+  layer; an absolute-path glob fails on Windows drive-letter colons),
+  and one inline memleak suppression in `_common.h` `vec_to_numpy`
+  (Ubuntu 24.04's older cppcheck cannot see the nb::capsule ownership
+  transfer; local 2.21 doesn't flag it).
 
 ## Version Pin Verification (Task 1, 2026-07-14) [DERIVED]
 The brief for this session assumed a three-way inconsistency (AGENTS.md
@@ -73,14 +84,9 @@ Last reconciled against live GitHub state: 2026-09-02.
 
 ## GitHub Issues Without Milestone [DERIVED]
 - Open issues:
-  - #5 Wire ruff check and lint-cpp.sh into CI (filed 2026-07-14)
   - #6 Decide whether to adopt mypy for the Python surface (filed 2026-07-14)
-  - #7 Run deferred ruff format pass across src/pylibstats, tests, examples
-    (filed 2026-07-14)
-- Closed issues: 2 as of 2026-09-02. (#15 — allowlist ships cp314t with
-  no 3.14t CI row — was resolved in-tree 2026-08-16 at `73f7f49` and
-  closed on GitHub 2026-08-22; the earlier note here claiming it was
-  still open was stale.)
+- Closed issues: 4 as of 2026-09-02 (#5 and #7 closed 2026-09-02 by the
+  catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
 ## In Progress [OPEN]
 - (none currently tracked — populate as work starts).
@@ -95,11 +101,8 @@ Last reconciled against live GitHub state: 2026-09-02.
 - mypy is not adopted for the Python surface — not evaluated this
   session (ruff covers lint/format; typing strictness is a separate,
   undecided question). Tracked as issue #6.
-- Neither `ruff check` nor `scripts/lint-cpp.sh` are wired into CI yet
-  (`ci.yml`, `wheels.yml` only build and test). Tracked as issue #5.
-- `ruff format` would reformat 16 files under the new config — not
-  applied in this pass since it's a large, purely cosmetic diff that
-  deserves its own visible change. Tracked as issue #7.
+- [resolved 2026-09-02] CI lint wiring (#5) and the deferred ruff
+  format pass (#7) both landed — see Decided and Next Steps.
 
 ## Cross-Repo Dependencies [OPEN]
 Depends on libstats via `find_package` (preferred) or `FetchContent`
@@ -230,8 +233,9 @@ catch-up-vs-widen call; catch-up chosen — the C++ fleet is at a natural
 pause after corvus v1.0.0, and clearing the tooling backlog now keeps
 the adoption-era sessions to pin bumps only). Format before CI wiring so
 a format check can go in green:
-1. #7: Run the deferred `ruff format` pass as its own reviewable change.
-2. #5: Wire `ruff check` + `scripts/lint-cpp.sh` into CI.
+1. ~~#7: ruff format pass~~ — DONE 2026-09-02 (`da098f4`, 424/424 green).
+2. ~~#5: CI lint wiring~~ — DONE 2026-09-02 (`d15687a` + suppression fix
+   `3b211c9`; full matrix + lint green).
 - DEFERRED past the adoption round: #6 mypy (a decision + annotation
   question; no drift cost to waiting).
 - Then the libstats v2.5.0 adoption-era pin bump: expect a MINOR
