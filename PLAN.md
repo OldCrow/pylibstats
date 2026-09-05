@@ -89,19 +89,17 @@ Last reconciled against live GitHub state: 2026-09-02.
   catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
 ## In Progress [OPEN]
-- **0.7.0 release in flight 2026-09-04**: PR #18 squash-merged to main
-  (`6ac8233`, user-merged in the UI; full 13-job matrix green incl.
-  3.14t and ASan/UBSan) — libstats pin v2.3.1 → v2.4.0 plus bindings
-  for the v2.4.0 eight (19 → 27; suite 424 → 632). Signed tag v0.7.0
-  created locally, NOT yet pushed — the tag push is the PyPI trigger
-  (wheels.yml publishes on refs/tags/v* with no environment protection
-  rules), held for explicit user go-ahead. After push: verify wheels +
-  PyPI 0.7.0, create the GitHub release, then mark this entry done.
-  Parameterization findings recorded in the tag message and PR #18:
-  Erlang `lam` is a RATE, InverseGamma `beta` is a SCALE (probed vs
-  scipy before asserting; the header's internal "RATE" comment refers
-  to the Gamma delegate), TruncatedNormal bounds are ABSOLUTE (scipy
-  truncnorm standardizes).
+- **0.7.0 SHIPPED 2026-09-05**: PR #18 squash-merged (`6ac8233`,
+  user-merged in the UI; full 13-job matrix green incl. 3.14t and
+  ASan/UBSan) — libstats pin v2.3.1 → v2.4.0 plus bindings for the
+  v2.4.0 eight (19 → 27; suite 424 → 632). Signed tag v0.7.0 pushed
+  [user-approved — tag push IS the PyPI trigger]; wheels green on all
+  five targets; PyPI 0.7.0 live (16 files incl. sdist); GitHub release
+  published. Parameterization findings recorded in the tag message and
+  PR #18: Erlang `lam` is a RATE, InverseGamma `beta` is a SCALE
+  (probed vs scipy before asserting; the header's internal "RATE"
+  comment refers to the Gamma delegate), TruncatedNormal bounds are
+  ABSOLUTE (scipy truncnorm standardizes).
 
 ## Known Gaps [OPEN]
 - [2026-08-16, resolved same day] The pylibhmm `wheels.yml` denylist defect
