@@ -121,6 +121,54 @@ def cauchy():
 
 
 @pytest.fixture
+def logistic():
+    """Logistic distribution Logistic(mu=2, s=1.5)."""
+    return pylibstats.Logistic(2.0, 1.5)
+
+
+@pytest.fixture
+def gumbel():
+    """Gumbel distribution Gumbel(mu=1, beta=2)."""
+    return pylibstats.Gumbel(1.0, 2.0)
+
+
+@pytest.fixture
+def erlang():
+    """Erlang distribution Erlang(k=3, lam=2)."""
+    return pylibstats.Erlang(3, 2.0)
+
+
+@pytest.fixture
+def fisher_f():
+    """Fisher-Snedecor F distribution F(d1=3, d2=5)."""
+    return pylibstats.FisherF(3.0, 5.0)
+
+
+@pytest.fixture
+def inverse_gamma():
+    """Inverse Gamma distribution InvGamma(alpha=3, beta=2)."""
+    return pylibstats.InverseGamma(3.0, 2.0)
+
+
+@pytest.fixture
+def half_normal():
+    """Half-normal distribution HalfNormal(sigma=2)."""
+    return pylibstats.HalfNormal(2.0)
+
+
+@pytest.fixture
+def bernoulli():
+    """Bernoulli distribution Bernoulli(p=0.3)."""
+    return pylibstats.Bernoulli(0.3)
+
+
+@pytest.fixture
+def truncated_normal():
+    """Truncated normal N(0, 1) restricted to [-1, 1.5]."""
+    return pylibstats.TruncatedNormal(0.0, 1.0, -1.0, 1.5)
+
+
+@pytest.fixture
 def rng():
     """Deterministic NumPy random generator for reproducible test data."""
     return np.random.default_rng(seed=42)

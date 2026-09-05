@@ -223,19 +223,128 @@ class Cauchy(_core.Cauchy):
     @gamma.setter
     def gamma(self, value: float) -> None: ...
 
+class Logistic(_core.Logistic):
+    """Logistic distribution Logistic(mu, s)."""
+    def __init__(self, mu: float = 0.0, s: float = 1.0) -> None: ...
+    @property
+    def mu(self) -> float: ...
+    @mu.setter
+    def mu(self, value: float) -> None: ...
+    @property
+    def s(self) -> float: ...
+    @s.setter
+    def s(self, value: float) -> None: ...
+
+class Gumbel(_core.Gumbel):
+    """Gumbel (maximum, right-skewed) distribution Gumbel(mu, beta)."""
+    def __init__(self, mu: float = 0.0, beta: float = 1.0) -> None: ...
+    @property
+    def mu(self) -> float: ...
+    @mu.setter
+    def mu(self, value: float) -> None: ...
+    @property
+    def beta(self) -> float: ...
+    @beta.setter
+    def beta(self, value: float) -> None: ...
+
+class Erlang(_core.Erlang):
+    """Erlang distribution Erlang(k, lam). Gamma restricted to integer shape k."""
+    def __init__(self, k: int = 1, lam: float = 1.0) -> None: ...
+    @property
+    def k(self) -> int: ...
+    @k.setter
+    def k(self, value: int) -> None: ...
+    @property
+    def lam(self) -> float: ...
+    @lam.setter
+    def lam(self, value: float) -> None: ...
+
+class FisherF(_core.FisherF):
+    """Fisher-Snedecor F distribution F(d1, d2)."""
+    def __init__(self, d1: float = 1.0, d2: float = 1.0) -> None: ...
+    @property
+    def d1(self) -> float: ...
+    @d1.setter
+    def d1(self, value: float) -> None: ...
+    @property
+    def d2(self) -> float: ...
+    @d2.setter
+    def d2(self, value: float) -> None: ...
+
+class InverseGamma(_core.InverseGamma):
+    """Inverse Gamma distribution InvGamma(alpha, beta). Beta is a SCALE parameter."""
+    def __init__(self, alpha: float = 1.0, beta: float = 1.0) -> None: ...
+    @property
+    def alpha(self) -> float: ...
+    @alpha.setter
+    def alpha(self, value: float) -> None: ...
+    @property
+    def beta(self) -> float: ...
+    @beta.setter
+    def beta(self, value: float) -> None: ...
+
+class HalfNormal(_core.HalfNormal):
+    """Half-normal distribution HalfNormal(sigma)."""
+    def __init__(self, sigma: float = 1.0) -> None: ...
+    @property
+    def sigma(self) -> float: ...
+    @sigma.setter
+    def sigma(self, value: float) -> None: ...
+
+class Bernoulli(_core.Bernoulli):
+    """Bernoulli distribution Bernoulli(p)."""
+    def __init__(self, p: float = 0.5) -> None: ...
+    @property
+    def p(self) -> float: ...
+    @p.setter
+    def p(self, value: float) -> None: ...
+
+class TruncatedNormal(_core.TruncatedNormal):
+    """Truncated normal distribution N(mu, sigma) restricted to [a, b]."""
+    def __init__(
+        self,
+        mu: float = 0.0,
+        sigma: float = 1.0,
+        a: float = ...,
+        b: float = ...,
+    ) -> None: ...
+    @property
+    def mu(self) -> float: ...
+    @mu.setter
+    def mu(self, value: float) -> None: ...
+    @property
+    def sigma(self) -> float: ...
+    @sigma.setter
+    def sigma(self, value: float) -> None: ...
+    @property
+    def a(self) -> float: ...
+    @a.setter
+    def a(self, value: float) -> None: ...
+    @property
+    def b(self) -> float: ...
+    @b.setter
+    def b(self, value: float) -> None: ...
+
 Normal = Gaussian
 
 __all__ = [
+    "Bernoulli",
     "Beta",
     "Binomial",
     "Cauchy",
     "ChiSquared",
     "DiscreteUniform",
+    "Erlang",
     "Exponential",
+    "FisherF",
     "Gamma",
     "Gaussian",
     "Geometric",
+    "Gumbel",
+    "HalfNormal",
+    "InverseGamma",
     "Laplace",
+    "Logistic",
     "LogNormal",
     "NegativeBinomial",
     "Normal",
@@ -243,6 +352,7 @@ __all__ = [
     "Poisson",
     "Rayleigh",
     "StudentT",
+    "TruncatedNormal",
     "Uniform",
     "VonMises",
     "Weibull",

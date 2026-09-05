@@ -5,23 +5,33 @@
 
 #include <nanobind/nanobind.h>
 
+#include <limits>
+
 // libstats distribution headers
+#include <libstats/distributions/bernoulli.h>
 #include <libstats/distributions/beta.h>
 #include <libstats/distributions/binomial.h>
 #include <libstats/distributions/cauchy.h>
 #include <libstats/distributions/chi_squared.h>
 #include <libstats/distributions/discrete.h>
+#include <libstats/distributions/erlang.h>
 #include <libstats/distributions/exponential.h>
+#include <libstats/distributions/fisher_f.h>
 #include <libstats/distributions/gamma.h>
 #include <libstats/distributions/gaussian.h>
 #include <libstats/distributions/geometric.h>
+#include <libstats/distributions/gumbel.h>
+#include <libstats/distributions/half_normal.h>
+#include <libstats/distributions/inverse_gamma.h>
 #include <libstats/distributions/laplace.h>
+#include <libstats/distributions/logistic.h>
 #include <libstats/distributions/lognormal.h>
 #include <libstats/distributions/negative_binomial.h>
 #include <libstats/distributions/pareto.h>
 #include <libstats/distributions/poisson.h>
 #include <libstats/distributions/rayleigh.h>
 #include <libstats/distributions/student_t.h>
+#include <libstats/distributions/truncated_normal.h>
 #include <libstats/distributions/uniform.h>
 #include <libstats/distributions/von_mises.h>
 #include <libstats/distributions/weibull.h>
@@ -403,4 +413,169 @@ NB_MODULE(_core, m) {
             [](CauchyDistribution& d, double v) { d.setGamma(v); },
             "Scale parameter \u03b3 (must be positive).");
     bind_common_methods<CauchyDistribution>(cauchy);
+
+    // -----------------------------------------------------------------------
+    // Logistic
+    // -----------------------------------------------------------------------
+    auto logistic = nb::class_<LogisticDistribution>(m, "Logistic",
+        "Logistic distribution Logistic(mu, s).")
+        .def("__init__",
+             [](LogisticDistribution* self, double mu, double s) {
+                 checked_init(self, mu, s);
+             },
+             nb::arg("mu") = 0.0, nb::arg("s") = 1.0)
+        .def_prop_rw("mu",
+            [](const LogisticDistribution& d) { return d.getMu(); },
+            [](LogisticDistribution& d, double v) { d.setMu(v); },
+            "Location parameter \u03bc (any finite value).")
+        .def_prop_rw("s",
+            [](const LogisticDistribution& d) { return d.getS(); },
+            [](LogisticDistribution& d, double v) { d.setS(v); },
+            "Scale parameter s (must be positive).");
+    bind_common_methods<LogisticDistribution>(logistic);
+
+    // -----------------------------------------------------------------------
+    // Gumbel
+    // -----------------------------------------------------------------------
+    auto gumbel = nb::class_<GumbelDistribution>(m, "Gumbel",
+        "Gumbel (maximum, right-skewed) distribution Gumbel(mu, beta).")
+        .def("__init__",
+             [](GumbelDistribution* self, double mu, double beta) {
+                 checked_init(self, mu, beta);
+             },
+             nb::arg("mu") = 0.0, nb::arg("beta") = 1.0)
+        .def_prop_rw("mu",
+            [](const GumbelDistribution& d) { return d.getMu(); },
+            [](GumbelDistribution& d, double v) { d.setMu(v); },
+            "Location parameter \u03bc (any finite value).")
+        .def_prop_rw("beta",
+            [](const GumbelDistribution& d) { return d.getBeta(); },
+            [](GumbelDistribution& d, double v) { d.setBeta(v); },
+            "Scale parameter \u03b2 (must be positive).");
+    bind_common_methods<GumbelDistribution>(gumbel);
+
+    // -----------------------------------------------------------------------
+    // Erlang
+    // -----------------------------------------------------------------------
+    auto erlang = nb::class_<ErlangDistribution>(m, "Erlang",
+        "Erlang distribution Erlang(k, lambda). Gamma restricted to integer shape k.")
+        .def("__init__",
+             [](ErlangDistribution* self, int k, double lam) {
+                 checked_init(self, k, lam);
+             },
+             nb::arg("k") = 1, nb::arg("lam") = 1.0)
+        .def_prop_rw("k",
+            [](const ErlangDistribution& d) { return d.getK(); },
+            [](ErlangDistribution& d, int v) { d.setK(v); },
+            "Shape parameter k (positive integer).")
+        .def_prop_rw("lam",
+            [](const ErlangDistribution& d) { return d.getLambda(); },
+            [](ErlangDistribution& d, double v) { d.setLambda(v); },
+            "Rate parameter \u03bb (must be positive).");
+    bind_common_methods<ErlangDistribution>(erlang);
+
+    // -----------------------------------------------------------------------
+    // Fisher F
+    // -----------------------------------------------------------------------
+    auto fisher_f = nb::class_<FDistribution>(m, "FisherF",
+        "Fisher-Snedecor F distribution F(d1, d2).")
+        .def("__init__",
+             [](FDistribution* self, double d1, double d2) {
+                 checked_init(self, d1, d2);
+             },
+             nb::arg("d1") = 1.0, nb::arg("d2") = 1.0)
+        .def_prop_rw("d1",
+            [](const FDistribution& d) { return d.getD1(); },
+            [](FDistribution& d, double v) { d.setD1(v); },
+            "Numerator degrees of freedom d1 (must be positive).")
+        .def_prop_rw("d2",
+            [](const FDistribution& d) { return d.getD2(); },
+            [](FDistribution& d, double v) { d.setD2(v); },
+            "Denominator degrees of freedom d2 (must be positive).");
+    bind_common_methods<FDistribution>(fisher_f);
+
+    // -----------------------------------------------------------------------
+    // Inverse Gamma
+    // -----------------------------------------------------------------------
+    auto inverse_gamma = nb::class_<InverseGammaDistribution>(m, "InverseGamma",
+        "Inverse Gamma distribution InvGamma(alpha, beta). Beta is a SCALE parameter.")
+        .def("__init__",
+             [](InverseGammaDistribution* self, double alpha, double beta) {
+                 checked_init(self, alpha, beta);
+             },
+             nb::arg("alpha") = 1.0, nb::arg("beta") = 1.0)
+        .def_prop_rw("alpha",
+            [](const InverseGammaDistribution& d) { return d.getAlpha(); },
+            [](InverseGammaDistribution& d, double v) { d.setAlpha(v); },
+            "Shape parameter \u03b1 (must be positive).")
+        .def_prop_rw("beta",
+            [](const InverseGammaDistribution& d) { return d.getBeta(); },
+            [](InverseGammaDistribution& d, double v) { d.setBeta(v); },
+            "Scale parameter \u03b2 (must be positive).");
+    bind_common_methods<InverseGammaDistribution>(inverse_gamma);
+
+    // -----------------------------------------------------------------------
+    // Half-Normal
+    // -----------------------------------------------------------------------
+    auto half_normal = nb::class_<HalfNormalDistribution>(m, "HalfNormal",
+        "Half-normal distribution HalfNormal(sigma).")
+        .def("__init__",
+             [](HalfNormalDistribution* self, double sigma) {
+                 checked_init(self, sigma);
+             },
+             nb::arg("sigma") = 1.0)
+        .def_prop_rw("sigma",
+            [](const HalfNormalDistribution& d) { return d.getSigma(); },
+            [](HalfNormalDistribution& d, double v) { d.setSigma(v); },
+            "Scale parameter \u03c3 (must be positive).");
+    bind_common_methods<HalfNormalDistribution>(half_normal);
+
+    // -----------------------------------------------------------------------
+    // Bernoulli
+    // -----------------------------------------------------------------------
+    auto bernoulli = nb::class_<BernoulliDistribution>(m, "Bernoulli",
+        "Bernoulli distribution Bernoulli(p). p in [0, 1] inclusive.")
+        .def("__init__",
+             [](BernoulliDistribution* self, double p) {
+                 checked_init(self, p);
+             },
+             nb::arg("p") = 0.5)
+        .def_prop_rw("p",
+            [](const BernoulliDistribution& d) { return d.getP(); },
+            [](BernoulliDistribution& d, double v) { d.setP(v); },
+            "Success probability p (in [0, 1] inclusive).");
+    bind_common_methods<BernoulliDistribution>(bernoulli);
+
+    // -----------------------------------------------------------------------
+    // Truncated Normal
+    // -----------------------------------------------------------------------
+    auto truncated_normal = nb::class_<TruncatedNormalDistribution>(m, "TruncatedNormal",
+        "Truncated normal distribution N(mu, sigma) restricted to [a, b]. "
+        "Bounds are absolute coordinates (not standardized as in scipy) and "
+        "may be +/-inf; windows whose normalization underflows double "
+        "(roughly beyond +/-37.5 sigma) are rejected.")
+        .def("__init__",
+             [](TruncatedNormalDistribution* self, double mu, double sigma, double a, double b) {
+                 checked_init(self, mu, sigma, a, b);
+             },
+             nb::arg("mu") = 0.0, nb::arg("sigma") = 1.0,
+             nb::arg("a") = -std::numeric_limits<double>::infinity(),
+             nb::arg("b") = std::numeric_limits<double>::infinity())
+        .def_prop_rw("mu",
+            [](const TruncatedNormalDistribution& d) { return d.getMu(); },
+            [](TruncatedNormalDistribution& d, double v) { d.setMu(v); },
+            "Location parameter \u03bc of the parent normal (any finite value).")
+        .def_prop_rw("sigma",
+            [](const TruncatedNormalDistribution& d) { return d.getSigma(); },
+            [](TruncatedNormalDistribution& d, double v) { d.setSigma(v); },
+            "Scale parameter \u03c3 of the parent normal (must be positive).")
+        .def_prop_rw("a",
+            [](const TruncatedNormalDistribution& d) { return d.getLowerBound(); },
+            [](TruncatedNormalDistribution& d, double v) { d.setLowerBound(v); },
+            "Lower truncation bound a (absolute; -inf for untruncated).")
+        .def_prop_rw("b",
+            [](const TruncatedNormalDistribution& d) { return d.getUpperBound(); },
+            [](TruncatedNormalDistribution& d, double v) { d.setUpperBound(v); },
+            "Upper truncation bound b (absolute; +inf for untruncated).");
+    bind_common_methods<TruncatedNormalDistribution>(truncated_normal);
 }
