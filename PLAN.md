@@ -89,7 +89,19 @@ Last reconciled against live GitHub state: 2026-09-02.
   catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
 ## In Progress [OPEN]
-- (none currently tracked — populate as work starts).
+- **0.7.0 release in flight 2026-09-04**: PR #18 squash-merged to main
+  (`6ac8233`, user-merged in the UI; full 13-job matrix green incl.
+  3.14t and ASan/UBSan) — libstats pin v2.3.1 → v2.4.0 plus bindings
+  for the v2.4.0 eight (19 → 27; suite 424 → 632). Signed tag v0.7.0
+  created locally, NOT yet pushed — the tag push is the PyPI trigger
+  (wheels.yml publishes on refs/tags/v* with no environment protection
+  rules), held for explicit user go-ahead. After push: verify wheels +
+  PyPI 0.7.0, create the GitHub release, then mark this entry done.
+  Parameterization findings recorded in the tag message and PR #18:
+  Erlang `lam` is a RATE, InverseGamma `beta` is a SCALE (probed vs
+  scipy before asserting; the header's internal "RATE" comment refers
+  to the Gamma delegate), TruncatedNormal bounds are ABSOLUTE (scipy
+  truncnorm standardizes).
 
 ## Known Gaps [OPEN]
 - [2026-08-16, resolved same day] The pylibhmm `wheels.yml` denylist defect
@@ -238,12 +250,13 @@ a format check can go in green:
    `3b211c9`; full matrix + lint green).
 - DEFERRED past the adoption round: #6 mypy (a decision + annotation
   question; no drift cost to waiting).
-- Then the libstats v2.5.0 adoption-era pin bump: expect a MINOR
-  pylibstats bump, not a patch — the corvus swap changes numbers users
+- ~~The libstats v2.4.0 catch-up~~ **DONE 2026-09-04** (PR #18 /
+  0.7.0, see In Progress): the eight new distributions are bound, so
+  the v2.5.0 adoption-era session is back to a pin bump only. That
+  bump stays MINOR, not patch — the corvus swap changes numbers users
   observe (the v2.2.0/0.5.0 Bessel precedent), so the release notes
-  carry the behavior change. No binding-surface change is expected from
-  v2.5.0 itself; v2.4.0/v2.6.0's new distributions will need new
-  bindings + hand-written stubs when they ship.
+  carry the behavior change. v2.6.0's new distributions will need the
+  same bindings + hand-written stubs treatment when they ship.
 
 ## Build-Stack Standardization (2026-07-23) [DERIVED]
 Cross-repo effort tracked in the fleet standards repo
