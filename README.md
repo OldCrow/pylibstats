@@ -4,7 +4,7 @@ Python bindings for [libstats](https://github.com/OldCrow/libstats) — a C++20 
 
 ## Features
 
-- **19 distributions**: Gaussian, Exponential, Uniform, Poisson, Discrete Uniform, Gamma, Chi-Squared, Log-Normal, Student's t, Beta, Weibull, Rayleigh, Pareto, Von Mises, Binomial, Negative Binomial, Geometric, Laplace, Cauchy
+- **27 distributions**: Gaussian, Exponential, Uniform, Poisson, Discrete Uniform, Gamma, Chi-Squared, Log-Normal, Student's t, Beta, Weibull, Rayleigh, Pareto, Von Mises, Binomial, Negative Binomial, Geometric, Laplace, Cauchy, Logistic, Gumbel, Bernoulli, Erlang, Fisher F, Inverse Gamma, Half-Normal, Truncated Normal
 - **NumPy integration**: pass arrays directly to `pdf()`, `cdf()`, `log_pdf()` — the SIMD/parallel batch path runs automatically
 - **GIL-releasing**: batch operations release the Python GIL for concurrent workloads
 - **SciPy-compatible naming**: `pdf`, `cdf`, `ppf`, `fit`, `sample`

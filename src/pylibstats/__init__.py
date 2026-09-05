@@ -110,6 +110,12 @@ def _require_positive_probability(value, name):
         raise ValueError(f"{name} must be in (0, 1]")
 
 
+def _require_not_nan(value, name):
+    """Raise ValueError if *value* is NaN (infinities are allowed)."""
+    if math.isnan(value):
+        raise ValueError(f"{name} must not be NaN")
+
+
 def _validated_prop(parent_prop, validator, param_name, doc=None):
     """Create a property that validates before delegating to a nanobind property setter."""
 
@@ -841,6 +847,336 @@ class Cauchy(_core.Cauchy):
         super().fit(_validate_fit_data(data))
 
 
+class Logistic(_core.Logistic):
+    """Logistic distribution Logistic(mu, s).
+
+    Parameters
+    ----------
+    mu : float
+        Location parameter μ (any finite value, default 0).
+    s : float
+        Scale parameter s (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *mu* is not finite or *s* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, mu=0.0, s=1.0):
+        _require_finite(mu, "Location parameter (mu)")
+        _require_positive_finite(s, "Scale parameter (s)")
+        super().__init__(mu=mu, s=s)
+
+    mu = _validated_prop(
+        _core.Logistic.mu, _require_finite, "Location parameter (mu)", "Location parameter μ."
+    )
+    s = _validated_prop(
+        _core.Logistic.s, _require_positive_finite, "Scale parameter (s)", "Scale parameter s."
+    )
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
+class Gumbel(_core.Gumbel):
+    """Gumbel (maximum, right-skewed) distribution Gumbel(mu, beta).
+
+    Parameters
+    ----------
+    mu : float
+        Location parameter μ (any finite value, default 0).
+    beta : float
+        Scale parameter β (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *mu* is not finite or *beta* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, mu=0.0, beta=1.0):
+        _require_finite(mu, "Location parameter (mu)")
+        _require_positive_finite(beta, "Scale parameter (beta)")
+        super().__init__(mu=mu, beta=beta)
+
+    mu = _validated_prop(
+        _core.Gumbel.mu, _require_finite, "Location parameter (mu)", "Location parameter μ."
+    )
+    beta = _validated_prop(
+        _core.Gumbel.beta,
+        _require_positive_finite,
+        "Scale parameter (beta)",
+        "Scale parameter β.",
+    )
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
+class Erlang(_core.Erlang):
+    """Erlang distribution Erlang(k, lam). Gamma restricted to integer shape k.
+
+    Parameters
+    ----------
+    k : int
+        Shape parameter (positive integer, default 1).
+    lam : float
+        Rate parameter λ (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *k* is not a positive integer or *lam* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, k=1, lam=1.0):
+        if not isinstance(k, (int, np.integer)) or k < 1:
+            raise ValueError("k must be a positive integer")
+        _require_positive_finite(lam, "Lambda (rate parameter)")
+        super().__init__(k=int(k), lam=lam)
+
+    @property
+    def k(self):
+        """Shape parameter k (positive integer)."""
+        return _core.Erlang.k.__get__(self)
+
+    @k.setter
+    def k(self, value):
+        if not isinstance(value, (int, np.integer)) or value < 1:
+            raise ValueError("k must be a positive integer")
+        _core.Erlang.k.__set__(self, int(value))
+
+    lam = _validated_prop(
+        _core.Erlang.lam,
+        _require_positive_finite,
+        "Lambda (rate parameter)",
+        "Rate parameter λ.",
+    )
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
+class FisherF(_core.FisherF):
+    """Fisher-Snedecor F distribution F(d1, d2).
+
+    Parameters
+    ----------
+    d1 : float
+        Numerator degrees of freedom (must be positive, default 1).
+    d2 : float
+        Denominator degrees of freedom (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *d1* or *d2* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, d1=1.0, d2=1.0):
+        _require_positive_finite(d1, "Numerator degrees of freedom (d1)")
+        _require_positive_finite(d2, "Denominator degrees of freedom (d2)")
+        super().__init__(d1=d1, d2=d2)
+
+    d1 = _validated_prop(
+        _core.FisherF.d1,
+        _require_positive_finite,
+        "Numerator degrees of freedom (d1)",
+        "Numerator degrees of freedom d1.",
+    )
+    d2 = _validated_prop(
+        _core.FisherF.d2,
+        _require_positive_finite,
+        "Denominator degrees of freedom (d2)",
+        "Denominator degrees of freedom d2.",
+    )
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
+class InverseGamma(_core.InverseGamma):
+    """Inverse Gamma distribution InvGamma(alpha, beta). Beta is a SCALE parameter.
+
+    Parameters
+    ----------
+    alpha : float
+        Shape parameter α (must be positive, default 1).
+    beta : float
+        Scale parameter β (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *alpha* or *beta* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, alpha=1.0, beta=1.0):
+        _require_positive_finite(alpha, "Alpha (shape parameter)")
+        _require_positive_finite(beta, "Beta (scale parameter)")
+        super().__init__(alpha=alpha, beta=beta)
+
+    alpha = _validated_prop(
+        _core.InverseGamma.alpha,
+        _require_positive_finite,
+        "Alpha (shape parameter)",
+        "Shape parameter α.",
+    )
+    beta = _validated_prop(
+        _core.InverseGamma.beta,
+        _require_positive_finite,
+        "Beta (scale parameter)",
+        "Scale parameter β.",
+    )
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
+class HalfNormal(_core.HalfNormal):
+    """Half-normal distribution HalfNormal(sigma).
+
+    Parameters
+    ----------
+    sigma : float
+        Scale parameter σ (must be positive, default 1).
+
+    Raises
+    ------
+    ValueError
+        If *sigma* is not positive and finite.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, sigma=1.0):
+        _require_positive_finite(sigma, "Scale parameter (sigma)")
+        super().__init__(sigma=sigma)
+
+    sigma = _validated_prop(
+        _core.HalfNormal.sigma,
+        _require_positive_finite,
+        "Scale parameter (sigma)",
+        "Scale parameter σ.",
+    )
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
+class Bernoulli(_core.Bernoulli):
+    """Bernoulli distribution Bernoulli(p).
+
+    Parameters
+    ----------
+    p : float
+        Success probability p (in [0, 1] inclusive, default 0.5).
+
+    Raises
+    ------
+    ValueError
+        If *p* is not in [0, 1].
+    """
+
+    __slots__ = ()
+
+    def __init__(self, p=0.5):
+        _require_probability(p, "Success probability (p)")
+        super().__init__(p=p)
+
+    p = _validated_prop(
+        _core.Bernoulli.p,
+        _require_probability,
+        "Success probability (p)",
+        "Success probability p.",
+    )
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
+class TruncatedNormal(_core.TruncatedNormal):
+    """Truncated normal distribution N(mu, sigma) restricted to [a, b].
+
+    The truncation bounds *a* and *b* are absolute coordinates (unlike
+    ``scipy.stats.truncnorm``, whose bounds are standardized) and may be
+    ``-inf`` / ``+inf`` for one-sided or no truncation.
+
+    Parameters
+    ----------
+    mu : float
+        Location parameter μ of the parent normal (any finite value,
+        default 0).
+    sigma : float
+        Scale parameter σ of the parent normal (must be positive,
+        default 1).
+    a : float
+        Lower truncation bound (default ``-inf``; must not be NaN).
+    b : float
+        Upper truncation bound (default ``+inf``; must not be NaN, and
+        must be strictly greater than *a*).
+
+    Raises
+    ------
+    ValueError
+        If a parameter is invalid, or if the truncation window lies so
+        deep in the Gaussian tail that its normalization constant
+        underflows double precision (roughly beyond ±37.5σ).
+    """
+
+    __slots__ = ()
+
+    def __init__(self, mu=0.0, sigma=1.0, a=-math.inf, b=math.inf):
+        _require_finite(mu, "Location parameter (mu)")
+        _require_positive_finite(sigma, "Scale parameter (sigma)")
+        _require_not_nan(a, "Lower truncation bound (a)")
+        _require_not_nan(b, "Upper truncation bound (b)")
+        if not a < b:
+            raise ValueError(
+                "Upper truncation bound (b) must be strictly greater than lower bound (a)"
+            )
+        super().__init__(mu=mu, sigma=sigma, a=a, b=b)
+
+    mu = _validated_prop(
+        _core.TruncatedNormal.mu,
+        _require_finite,
+        "Location parameter (mu)",
+        "Location parameter μ of the parent normal.",
+    )
+    sigma = _validated_prop(
+        _core.TruncatedNormal.sigma,
+        _require_positive_finite,
+        "Scale parameter (sigma)",
+        "Scale parameter σ of the parent normal.",
+    )
+    a = _validated_prop(
+        _core.TruncatedNormal.a,
+        _require_not_nan,
+        "Lower truncation bound (a)",
+        "Lower truncation bound a (absolute coordinates).",
+    )
+    b = _validated_prop(
+        _core.TruncatedNormal.b,
+        _require_not_nan,
+        "Upper truncation bound (b)",
+        "Upper truncation bound b (absolute coordinates).",
+    )
+
+    def fit(self, data):
+        super().fit(_validate_fit_data(data))
+
+
 # SciPy-familiar alias
 Normal = Gaussian
 
@@ -895,21 +1231,36 @@ for _dist_cls, _core_cls in [
     (Geometric, _core.Geometric),
     (Laplace, _core.Laplace),
     (Cauchy, _core.Cauchy),
+    (Logistic, _core.Logistic),
+    (Gumbel, _core.Gumbel),
+    (Erlang, _core.Erlang),
+    (FisherF, _core.FisherF),
+    (InverseGamma, _core.InverseGamma),
+    (HalfNormal, _core.HalfNormal),
+    (Bernoulli, _core.Bernoulli),
+    (TruncatedNormal, _core.TruncatedNormal),
 ]:
     _install_batch_coercion(_dist_cls, _core_cls)
 del _dist_cls, _core_cls
 
 __all__ = [
+    "Bernoulli",
     "Beta",
     "Binomial",
     "Cauchy",
     "ChiSquared",
     "DiscreteUniform",
+    "Erlang",
     "Exponential",
+    "FisherF",
     "Gamma",
     "Gaussian",
     "Geometric",
+    "Gumbel",
+    "HalfNormal",
+    "InverseGamma",
     "Laplace",
+    "Logistic",
     "LogNormal",
     "NegativeBinomial",
     "Normal",
@@ -917,6 +1268,7 @@ __all__ = [
     "Poisson",
     "Rayleigh",
     "StudentT",
+    "TruncatedNormal",
     "Uniform",
     "VonMises",
     "Weibull",

@@ -18,11 +18,20 @@ von_mises = pylibstats.VonMises(mu=0.0, kappa=2.0)
 binomial = pylibstats.Binomial(n=10, p=0.5)
 neg_binom = pylibstats.NegativeBinomial(r=2.0, p=0.5)
 
+# The v2.4.0 eight (libstats 19 → 27)
+logistic = pylibstats.Logistic(mu=0.0, s=1.0)
+gumbel = pylibstats.Gumbel(mu=0.0, beta=2.0)
+bernoulli = pylibstats.Bernoulli(p=0.3)
+erlang = pylibstats.Erlang(k=3, lam=1.5)
+fisher_f = pylibstats.FisherF(d1=5.0, d2=10.0)
+inverse_gamma = pylibstats.InverseGamma(alpha=3.0, beta=2.0)
+half_normal = pylibstats.HalfNormal(sigma=1.0)
+truncated_normal = pylibstats.TruncatedNormal(mu=0.0, sigma=1.0, a=-1.0, b=2.0)
+
 # Normal is an alias for Gaussian
 normal = pylibstats.Normal(mu=100.0, sigma=15.0)
 
-print("── All 16 distributions ──")
-for d in [
+demo_dists = [
     gaussian,
     gamma,
     beta,
@@ -34,7 +43,18 @@ for d in [
     von_mises,
     binomial,
     neg_binom,
-]:
+    logistic,
+    gumbel,
+    bernoulli,
+    erlang,
+    fisher_f,
+    inverse_gamma,
+    half_normal,
+    truncated_normal,
+]
+
+print(f"── {len(demo_dists)} of the 27 distributions ──")
+for d in demo_dists:
     print(f"  {d!r}")
 
 # ── Scalar operations ────────────────────────────────────────────────────────
