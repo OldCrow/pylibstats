@@ -81,27 +81,8 @@ manually whenever `_core.cpp` bindings change.
 
 ## Session Start
 
-**Requires Python ≥ 3.11.** At the start of every session, do these steps in order:
-
-1. Verify machine architecture (OS + CPU) and Python architecture.
-2. Select the platform-specific build path for this host (see Platform-Specific Notes).
-3. Build/install/test only after the architecture check is complete.
-
-Architecture checks:
-
-```bash
-# macOS/Linux shells
-uname -m
-uname -s
-python -c "import platform, struct; print(platform.system(), platform.machine(), struct.calcsize('P')*8)"
-```
-
-```powershell
-# Windows PowerShell
-[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
-[System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture
-python -c "import platform, struct; print(platform.system(), platform.machine(), struct.calcsize('P')*8)"
-```
+**Requires Python ≥ 3.11.** Follow the standard architecture-check ritual:
+[SESSION-START.md](https://github.com/OldCrow/standards/blob/main/SESSION-START.md).
 
 ## Build Commands
 
@@ -176,13 +157,9 @@ python -m pytest tests -q
   desktop workload — any MSVC toolset with full C++20 support. Verified
   through VS 2026 (v18, MSVC 14.5x). Build Tools or a full IDE edition both
   work.
-- **Do not pin a generator locally.** CMake's default generator on Windows
-  auto-selects the newest installed Visual Studio, and a hard-coded
-  `CMAKE_GENERATOR="Visual Studio 17 2022"` breaks the moment VS upgrades
-  in place (a 2022→2026 upgrade leaves an empty `2022\` directory behind).
-  Toolset reproducibility belongs to CI, where the runner image pins it.
-  Pass an explicit `-Ccmake.define.CMAKE_GENERATOR="Visual Studio NN YYYY"`
-  only to troubleshoot generator selection itself.
+- Don't pin a generator locally — see
+  [WINDOWS-TOOLCHAIN.md §3](https://github.com/OldCrow/standards/blob/main/WINDOWS-TOOLCHAIN.md)
+  and [CMAKE-HOUSE-STYLE.md](https://github.com/OldCrow/standards/blob/main/CMAKE-HOUSE-STYLE.md).
 - If using `libstats_DIR`, the referenced `libstats` install must be built
   with compatible MSVC/x64 settings.
 
@@ -193,20 +170,12 @@ python -m pytest tests -q
 
 #### Windows toolchain setup
 
-No per-session activation is needed: the Visual Studio CMake generator
-locates its own toolchain, so `vcvars64.bat` activation is only required
-for non-VS generators (e.g. Ninja) or for running `cl.exe` directly.
-
-**One-time setup:**
-- Visual Studio Build Tools (not full IDE) is sufficient: `winget install
-  Microsoft.VisualStudio.2022.BuildTools` (or newer), `choco install
-  visualstudio2022buildtools`, or the installer from
-  https://visualstudio.microsoft.com/downloads/. Any 2022-or-later
-  edition works; paths vary by version and edition (e.g.
-  `C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\`,
-  `C:\Program Files\Microsoft Visual Studio\18\Community\`).
-- **Smart App Control must be Off** (Windows Security → App & Browser Control → SAC settings). SAC blocks locally compiled executables and cannot be re-enabled without a Windows reset.
-- CMake ≥ 3.25: https://cmake.org/download/, `winget install Kitware.CMake`, or `choco install cmake`. (Generator support for a new VS major version needs a correspondingly new CMake — VS 2026 needs CMake ≥ 4.1.)
+pylibstats needs no per-session `vcvars` activation: the Visual Studio CMake
+generator locates its own toolchain (the "VS generator" case in
+[WINDOWS-TOOLCHAIN.md](https://github.com/OldCrow/standards/blob/main/WINDOWS-TOOLCHAIN.md) —
+not the case that requires activation, which applies only to non-VS
+generators or direct `cl.exe` use). See that doc for one-time setup, the
+Smart App Control note, and the CMake version requirement.
 
 ## Coding Conventions
 
