@@ -33,51 +33,21 @@ Dependency notes:
 
 ## Architecture
 
-### Build model
 `_core` is a single nanobind extension module built via scikit-build-core.
-`CMakeLists.txt` tries `find_package(libstats)` first at its declared version
-floor; if not found, it falls back to `FetchContent` at its `GIT_TAG`, and
-accepts a `libstats_DIR` override for local development builds (no implicit
-sibling-directory preference — unlike pylibhmm's `../libhmm` behavior, this
-is deliberate; see PLAN.md).
+`CMakeLists.txt` tries `find_package(libstats)` at its declared version
+floor first, falling back to `FetchContent` at its `GIT_TAG` (no implicit
+sibling-directory preference, unlike pylibhmm — deliberate; see PLAN.md).
+Batch **input** (`pdf`/`log_pdf`/`cdf`) is genuinely zero-copy: a
+`std::span` is built directly over the NumPy buffer and consumed
+synchronously within the same bound call, while the NumPy array is kept
+alive by the Python call frame for that call's duration — this
+synchronous-consumption contract is what makes the zero-copy path safe;
+don't add a batch binding that stores the span past the call. Batch
+**output** is always a fresh heap allocation owned by the returned array.
+`fit()` and batch `ppf` are the two exceptions to the zero-copy input path.
 
-### `_common.h` — NumPy ⇔ libstats conversion
-Batch **input** is genuinely zero-copy: `pdf`/`log_pdf`/`cdf` construct a
-`std::span<const double>` directly over the NumPy array's buffer
-(`x.data()`) and pass it straight to libstats' span-based batch methods
-(`getProbability(span, span)` etc.) — no intermediate copy, consistent with
-libstats' own batch-API design and its SIMD/parallel auto-dispatch. This is
-safe because the span is constructed and consumed synchronously within the
-same bound call (GIL released only around the libstats call itself), while
-the NumPy array argument is kept alive by the Python call frame for the
-duration of that call.
-
-Batch **output** is a fresh heap allocation (`new double[n]`) wrapped in a
-NumPy array via an `nb::capsule` that deletes the buffer when the array is
-garbage-collected — ownership transfers to Python, not shared with C++.
-
-Two exceptions to the zero-copy input path:
-- `fit()` copies its input into an owned `std::vector<double>`, since
-  libstats' `fit()` takes a vector, not a span.
-- Batch `ppf` loops over `p.data()` element-by-element (no span overload)
-  because libstats does not expose a batch quantile method — only PDF,
-  LogPDF, and CDF have span-based batch overloads.
-
-### `__init__.py` — why the Python wrapper layer exists
-`__init__.py` subclasses each `_core` type to add parameter validation
-(clear `ValueError` messages) and dtype/shape coercion (`_coerce_batch_input`
-distinguishes scalar-like inputs, dispatched to the scalar C++ overload,
-from array-likes, coerced to a C-contiguous float64 ndarray for the batch
-overload). Per the module's own comment: this validation layer's original
-motivation — v1.x ABI safety between Homebrew LLVM and Apple Clang builds —
-no longer applies since v2.0 (both libstats and pylibstats now always build
-with the same system AppleClang libc++); it's retained purely for UX
-consistency (clean `ValueError`s instead of raw C++ exception text).
-
-### Type stubs
-`__init__.pyi` and `_core.pyi` are hand-written — no stub-generator
-invocation exists in `CMakeLists.txt`, `pyproject.toml`, or CI. Update them
-manually whenever `_core.cpp` bindings change.
+Full build-model, exception detail, `__init__.py`-validation, and
+type-stub notes: `docs/ARCHITECTURE.md`.
 
 ## Session Start
 
@@ -170,12 +140,12 @@ python -m pytest tests -q
 
 #### Windows toolchain setup
 
-pylibstats needs no per-session `vcvars` activation: the Visual Studio CMake
-generator locates its own toolchain (the "VS generator" case in
-[WINDOWS-TOOLCHAIN.md](https://github.com/OldCrow/standards/blob/main/WINDOWS-TOOLCHAIN.md) —
-not the case that requires activation, which applies only to non-VS
-generators or direct `cl.exe` use). See that doc for one-time setup, the
-Smart App Control note, and the CMake version requirement.
+pylibstats needs no per-session `vcvars` activation — the Visual Studio
+CMake generator locates its own toolchain (VS-generator case only;
+non-VS generators and direct `cl.exe` use still need it). See
+[WINDOWS-TOOLCHAIN.md](https://github.com/OldCrow/standards/blob/main/WINDOWS-TOOLCHAIN.md)
+for one-time setup, the Smart App Control note, and the CMake version
+requirement.
 
 ## Coding Conventions
 
@@ -255,6 +225,16 @@ questions: every run answers the first, only the canary answers the second.
 That job is why the pin value is **not** restated in prose anywhere — the
 check reads `CMakeLists.txt`, so `CMakeLists.txt` is the single source of
 truth.
+
+## Reading map — load on demand, not preemptively
+- Full architecture detail (build model, `_common.h` zero-copy
+  exceptions, `__init__.py` design, type-stub policy) →
+  `docs/ARCHITECTURE.md`.
+- Session bootstrap ritual → [SESSION-START.md](https://github.com/OldCrow/standards/blob/main/SESSION-START.md).
+- CMake conventions in depth → [CMAKE-HOUSE-STYLE.md](https://github.com/OldCrow/standards/blob/main/CMAKE-HOUSE-STYLE.md).
+- Windows toolchain setup in depth → [WINDOWS-TOOLCHAIN.md](https://github.com/OldCrow/standards/blob/main/WINDOWS-TOOLCHAIN.md).
+- CI/workflow rules fleet-wide → [CI-HOUSE-STYLE.md](https://github.com/OldCrow/standards/blob/main/CI-HOUSE-STYLE.md).
+- Session state, decisions, open items → `PLAN.md`.
 
 ## Open Items
 See PLAN.md for current status, in-progress work, and open questions.
