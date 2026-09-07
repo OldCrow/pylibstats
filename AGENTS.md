@@ -101,42 +101,31 @@ when no installed libstats is found.
 
 **Minimum macOS:** 13 Ventura (AppleClang 15 / Xcode 15). macOS Catalina (10.15) is not supported from `pylibstats` v0.3.0 / `libstats` v2.0.0 onwards.
 
-### macOS
-
-- Use the active Python environment for install/test.
-- If linking to local `libstats`, ensure that `libstats` was built for the same machine architecture (`arm64` vs `x86_64`).
+Build and test are the same on all three platforms — only the shell differs:
 
 ```bash
 python -m pip install -e ".[test]" -Ccmake.build-type=Release
 python -m pytest tests -q
 ```
+
+### macOS
+
+- Use the active Python environment for install/test.
+- If linking to local `libstats`, ensure that `libstats` was built for the same machine architecture (`arm64` vs `x86_64`).
 
 ### Linux
 
 - Requires GCC ≥ 13 or Clang ≥ 17 for C++20 support.
 - If `libstats` is not found locally, CMake fetches it automatically at the pinned `GIT_TAG` (see `CMakeLists.txt`).
 
-```bash
-python -m pip install -e ".[test]" -Ccmake.build-type=Release
-python -m pytest tests -q
-```
-
 ### Windows (MSVC)
 
-- **Minimum toolchain**: Visual Studio 2022 (17.x) or later with the C++
-  desktop workload — any MSVC toolset with full C++20 support. Verified
-  through VS 2026 (v18, MSVC 14.5x). Build Tools or a full IDE edition both
-  work.
+- Toolchain floor and install routes: [WINDOWS-TOOLCHAIN.md §1](https://github.com/OldCrow/standards/blob/main/WINDOWS-TOOLCHAIN.md#1-one-time-setup).
 - Don't pin a generator locally — see
   [WINDOWS-TOOLCHAIN.md §3](https://github.com/OldCrow/standards/blob/main/WINDOWS-TOOLCHAIN.md)
   and [CMAKE-HOUSE-STYLE.md](https://github.com/OldCrow/standards/blob/main/CMAKE-HOUSE-STYLE.md).
 - If using `libstats_DIR`, the referenced `libstats` install must be built
   with compatible MSVC/x64 settings.
-
-```powershell
-python -m pip install -e ".[test]" -Ccmake.build-type=Release
-python -m pytest tests -q
-```
 
 #### Windows toolchain setup
 
