@@ -85,6 +85,9 @@ Last reconciled against live GitHub state: 2026-09-02.
 ## GitHub Issues Without Milestone [DERIVED]
 - Open issues:
   - #6 Decide whether to adopt mypy for the Python surface (filed 2026-07-14)
+  - #20 corvus becomes a transitive dependency at the libstats v2.5.0
+    pin — wheel license text, NOTICE, Windows job budget (filed
+    2026-09-17; the checklist for the v0.8.0 bump)
 - Closed issues: 4 as of 2026-09-02 (#5 and #7 closed 2026-09-02 by the
   catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
@@ -253,7 +256,19 @@ a format check can go in green:
   the v2.5.0 adoption-era session is back to a pin bump only. That
   bump stays MINOR, not patch — the corvus swap changes numbers users
   observe (the v2.2.0/0.5.0 Bessel precedent), so the release notes
-  carry the behavior change. v2.6.0's new distributions will need the
+  carry the behavior change. AMENDED 2026-09-17 — "pin bump only" is
+  not quite true; the dependency was priced (libstats PLAN.md,
+  Cross-Repo Dependencies) and #20 carries this repo's share: wheels
+  bundle Highway object code from that pin on, so a root `NOTICE` +
+  `LICENSE-Apache-2.0` (auto-included by scikit-build-core's default
+  license-files globs) and MIT + Apache-2.0 metadata; the repo tracks
+  NO `LICENSE` file today, so add it in the same change; and ONE
+  decision — the Windows wheel job (19 min of a 30-min timeout) grows
+  by corvus's ~11-min MSVC build: raise the timeout and accept Highway's
+  AVX2 cap under MSVC, or move the Windows wheel to clang-cl (trial via
+  workflow_dispatch first). The full chain with fetched Highway was
+  mocked on Kaby Lake and links/runs; no CMakeLists change beyond the
+  pin. v2.6.0's new distributions will need the
   same bindings + hand-written stubs treatment when they ship.
 
 ## Build-Stack Standardization (2026-07-23) [DERIVED]
