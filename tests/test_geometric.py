@@ -125,6 +125,60 @@ class TestGeometricFitAndSample:
         assert fitted.p == pytest.approx(0.4, abs=0.02)
 
 
+class TestGeometricCountsBeyondIntMax:
+    """libstats #125 (fixed in v2.4.1): pmf/logpmf/cdf and sample() narrowed
+    the count to a C++ int. Past INT_MAX that wrapped on x86 (cdf -> 0,
+    log_pdf -> -inf) and saturated on AArch64 (cdf -> 1, log_pdf constant), so
+    ppf returned a count its own cdf rejected. Every check is two-sided against
+    the geometric closed form, so it fails on either architecture's wrong
+    answer; this is what shows the pin actually delivers the fix.
+
+    Tolerances are libstats' own floors at these counts, not the defect's
+    size: ~1e-4 absolute on the CDF (incomplete-beta lgamma cancellation,
+    libstats #126) and ~1e-7 relative on log(1 - p) at p = 1e-9.
+    """
+
+    P = 1e-9
+    INT_MAX = 2147483647.0
+
+    def test_ppf_cdf_roundtrip(self):
+        dist = pylibstats.Geometric(self.P)
+        k99 = dist.ppf(0.99)
+        assert k99 > self.INT_MAX, "test premise changed: the quantile fits an int"
+        assert dist.cdf(k99) == pytest.approx(0.99, abs=2e-4)
+
+    @pytest.mark.parametrize("k", [4.6e9, 1.6e10])
+    def test_scalar_matches_closed_form(self, k):
+        dist = pylibstats.Geometric(self.P)
+        log_pmf = math.log(self.P) + k * math.log1p(-self.P)
+        cdf = -math.expm1((k + 1.0) * math.log1p(-self.P))
+        assert dist.log_pdf(k) == pytest.approx(log_pmf, rel=1e-6)
+        assert dist.pdf(k) == pytest.approx(math.exp(log_pmf), rel=1e-5)
+        assert dist.cdf(k) == pytest.approx(cdf, abs=2e-4)
+
+    def test_batch_matches_scalar(self):
+        dist = pylibstats.Geometric(self.P)
+        xs = np.array([0.0, self.INT_MAX, self.INT_MAX + 1.0, 4.6e9, 1.6e10])
+        for batch, scalar in (
+            (dist.log_pdf(xs), dist.log_pdf),
+            (dist.pdf(xs), dist.pdf),
+            (dist.cdf(xs), dist.cdf),
+        ):
+            assert np.all(np.isfinite(batch))
+            np.testing.assert_array_equal(batch, [scalar(float(x)) for x in xs])
+
+    def test_sample_beyond_int_max(self):
+        # Mean (1-p)/p ~ 1e9; P(X > INT_MAX) = exp(-2.147) ~ 0.117.
+        samples = pylibstats.Geometric(self.P).sample(n=4000, seed=125)
+        assert np.all(np.isfinite(samples))
+        assert np.all(samples >= 0.0)
+        np.testing.assert_array_equal(samples, np.floor(samples))
+        # Standard error of the mean is 1.6%; 10% is ~6 sigma.
+        assert samples.mean() == pytest.approx(1e9, rel=0.1)
+        # Expected 467 of 4000 past INT_MAX, sigma ~ 20.
+        assert abs(int((samples > self.INT_MAX).sum()) - 467) < 120
+
+
 class TestGeometricRepr:
     """String representation."""
 

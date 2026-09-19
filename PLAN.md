@@ -31,6 +31,32 @@
   blind-exception test findings). `ruff format` applied repo-wide
   2026-09-02 (16 files, closed #7); check + format --check wired into
   CI the same day (closed #5), ruff pinned 0.16.5 there.
+- mypy adopted for the Python surface (2026-09-19, closes #6): config in
+  `pyproject.toml` `[tool.mypy]` — `disallow_untyped_defs`,
+  `check_untyped_defs`, `warn_unused_ignores`, `warn_redundant_casts`,
+  `warn_return_any`; not full `strict` (the reflection-heavy validated-property
+  machinery would need several more `Any` escapes for little accuracy gain).
+  Two settings deviate from the obvious choice and are commented in place:
+  `python_version = "3.12"`, not the project's 3.11 floor — numpy 2.5's
+  bundled `__init__.pyi` uses the PEP 695 `type` alias statement with no
+  `sys.version_info` guard, and mypy 2.3.1 refuses to parse that below 3.12
+  regardless of the project's own code (reproduced directly against the
+  installed numpy stub); 3.12 also matches the CI lint job's interpreter.
+  `files = ["src/pylibstats/__init__.py"]`, not the `src/pylibstats`
+  directory — `__init__.pyi` shadows `__init__.py` for any directory/package
+  mypy invocation (confirmed with `mypy --verbose`: only the stub gets
+  parsed), so the runtime module must be named explicitly or it is never
+  actually type-checked. `src/pylibstats/__init__.py` is fully annotated;
+  zero errors, zero `type: ignore`. One parameter (`_validated_prop`'s
+  `parent_prop`) is typed `Any` rather than `property`: mypy synthesizes a
+  class-level access of a stub `@property` as the getter's (overloaded)
+  function type, not `builtins.property`, so the `.__set__` reflection this
+  module relies on (validating before delegating to the nanobind descriptor)
+  has no expressible precise type — `Any` there reflects a type-checker
+  limitation, not a runtime ambiguity. mypy added to CI's `lint` job next to
+  ruff (installs bare `numpy`+`mypy`, not `pip install .[lint]`, to avoid
+  triggering the scikit-build-core native build in a job with no CMake/libstats
+  setup); added as a pinned `lint` extra in `pyproject.toml` for local dev.
 - C++ binding tooling: `scripts/lint-cpp.sh` — own cppcheck invocation
   (not a copy of libstats' CI cppcheck), requiring `--language=c++` for
   `_common.h`. Enforced (`--error-exitcode=1`) even though libstats' own
@@ -84,7 +110,9 @@ Last reconciled against live GitHub state: 2026-09-02.
 
 ## GitHub Issues Without Milestone [DERIVED]
 - Open issues:
-  - #6 Decide whether to adopt mypy for the Python surface (filed 2026-07-14)
+  - #6 Decide whether to adopt mypy for the Python surface (filed
+    2026-07-14) — decided and implemented on `chore/mypy-adoption`
+    (2026-09-19, see Decided); still open on GitHub pending merge.
   - #20 corvus becomes a transitive dependency at the libstats v2.5.0
     pin — wheel license text, NOTICE, Windows job budget (filed
     2026-09-17; the checklist for the v0.8.0 bump)
@@ -92,6 +120,14 @@ Last reconciled against live GitHub state: 2026-09-02.
   catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
 ## In Progress [OPEN]
+- **0.7.1 in PR #22** (2026-09-19, travel session): mypy adoption (#6)
+  plus the libstats pin v2.4.0 → v2.4.1 and the version bump. The pin is
+  behavior-changing for Geometric/NegativeBinomial only: counts past
+  INT_MAX (pmf, log_pdf, cdf, sample) were wrong on every platform
+  (libstats #125). `TestGeometricCountsBeyondIntMax` is two-sided against
+  the closed forms; shown 5/5 failing on a v2.4.0-source build and passing
+  on the fix. Owed after merge: signed tag v0.7.1 [tag push IS the PyPI
+  trigger — user-approved each time], GitHub release, wheels check.
 - **0.7.0 SHIPPED 2026-09-05**: PR #18 squash-merged (`6ac8233`,
   user-merged in the UI; full 13-job matrix green incl. 3.14t and
   ASan/UBSan) — libstats pin v2.3.1 → v2.4.0 plus bindings for the
@@ -111,9 +147,8 @@ Last reconciled against live GitHub state: 2026-09-02.
 - [2026-08-16, resolved same day] The missing 3.14t row in `ci.yml` flagged
   here was closed by `73f7f49`: Linux-only free-threaded row matching
   pylibhmm v0.10.0, CI green including the new `3.14t` job.
-- mypy is not adopted for the Python surface — not evaluated this
-  session (ruff covers lint/format; typing strictness is a separate,
-  undecided question). Tracked as issue #6.
+- [resolved 2026-09-19] mypy adopted for the Python surface, closing #6
+  — see Decided.
 - [resolved 2026-09-02] CI lint wiring (#5) and the deferred ruff
   format pass (#7) both landed — see Decided and Next Steps.
 
@@ -249,8 +284,8 @@ a format check can go in green:
 1. ~~#7: ruff format pass~~ — DONE 2026-09-02 (`da098f4`, 424/424 green).
 2. ~~#5: CI lint wiring~~ — DONE 2026-09-02 (`d15687a` + suppression fix
    `3b211c9`; full matrix + lint green).
-- DEFERRED past the adoption round: #6 mypy (a decision + annotation
-  question; no drift cost to waiting).
+- ~~#6 mypy adoption~~ — DONE 2026-09-19, see Decided (branch
+  `chore/mypy-adoption`, not yet merged).
 - ~~The libstats v2.4.0 catch-up~~ **DONE 2026-09-04** (PR #18 /
   0.7.0, see In Progress): the eight new distributions are bound, so
   the v2.5.0 adoption-era session is back to a pin bump only. That

@@ -10,10 +10,25 @@ SIMD-accelerated statistical distributions with NumPy integration.
 # off for this module only. Consumers type-check against __init__.pyi.
 
 import math
+from collections.abc import Callable, Iterable
+from typing import Any, cast
 
 import numpy as np
+import numpy.typing as npt
+from numpy.typing import NDArray
 
 from . import _core
+
+# Accepted by pdf / log_pdf / cdf / ppf: a scalar, or anything array-like.
+# _coerce_batch_input / _coerce_probability_input narrow this to either a
+# Python float (scalar C++ overload) or a C-contiguous float64 ndarray
+# (batch C++ overload).
+BatchInput = npt.ArrayLike
+# Accepted by fit(): any iterable of values, including a NumPy array, a
+# list/tuple, or a generator (materialised to a list before conversion; see
+# _validate_fit_data). Narrower than BatchInput: fit() needs multiple data
+# points, so a bare scalar is not accepted the way pdf/cdf/ppf accept one.
+FitData = Iterable[Any]
 
 # ---------------------------------------------------------------------------
 # Parameter validation helpers
@@ -25,19 +40,19 @@ from . import _core
 # ---------------------------------------------------------------------------
 
 
-def _require_finite(value, name):
+def _require_finite(value: float, name: str) -> None:
     """Raise ValueError if *value* is NaN or infinite."""
     if not math.isfinite(value):
         raise ValueError(f"{name} must be a finite number")
 
 
-def _require_positive_finite(value, name):
+def _require_positive_finite(value: float, name: str) -> None:
     """Raise ValueError if *value* is not a positive finite number."""
     if not math.isfinite(value) or value <= 0.0:
         raise ValueError(f"{name} must be a positive finite number")
 
 
-def _coerce_batch_input(x):
+def _coerce_batch_input(x: BatchInput) -> float | NDArray[np.float64]:
     """Normalize input for pdf / log_pdf / cdf.
 
     Scalars (int, float, 0-d array, NumPy scalar) become Python float so that
@@ -59,7 +74,7 @@ def _coerce_batch_input(x):
     return np.ascontiguousarray(arr)
 
 
-def _coerce_probability_input(p):
+def _coerce_probability_input(p: BatchInput) -> float | NDArray[np.float64]:
     """Normalize and validate ppf probability input.
 
     Accepts the same scalar/array-like inputs as ``_coerce_batch_input`` but
@@ -75,7 +90,7 @@ def _coerce_probability_input(p):
     return value
 
 
-def _validate_fit_data(data):
+def _validate_fit_data(data: FitData) -> NDArray[np.float64]:
     """Convert *data* to float64, then raise ValueError if empty or non-finite.
 
     Accepts any array-like including generators; always returns a 1-D
@@ -92,39 +107,57 @@ def _validate_fit_data(data):
     return arr
 
 
-def _require_non_negative_finite(value, name):
+def _require_non_negative_finite(value: float, name: str) -> None:
     """Raise ValueError if *value* is not a non-negative finite number."""
     if not math.isfinite(value) or value < 0.0:
         raise ValueError(f"{name} must be a non-negative finite number")
 
 
-def _require_probability(value, name):
+def _require_probability(value: float, name: str) -> None:
     """Raise ValueError if *value* is not in [0, 1]."""
     if not math.isfinite(value) or value < 0.0 or value > 1.0:
         raise ValueError(f"{name} must be in [0, 1]")
 
 
-def _require_positive_probability(value, name):
+def _require_positive_probability(value: float, name: str) -> None:
     """Raise ValueError if *value* is not in (0, 1]."""
     if not math.isfinite(value) or value <= 0.0 or value > 1.0:
         raise ValueError(f"{name} must be in (0, 1]")
 
 
-def _require_not_nan(value, name):
+def _require_not_nan(value: float, name: str) -> None:
     """Raise ValueError if *value* is NaN (infinities are allowed)."""
     if math.isnan(value):
         raise ValueError(f"{name} must not be NaN")
 
 
-def _validated_prop(parent_prop, validator, param_name, doc=None):
-    """Create a property that validates before delegating to a nanobind property setter."""
+def _validated_prop(
+    parent_prop: Any,
+    validator: Callable[[float, str], None],
+    param_name: str,
+    doc: str | None = None,
+) -> property:
+    """Create a property that validates before delegating to a nanobind property setter.
 
-    def getter(self):
+    *parent_prop* is a nanobind-bound ``_core`` class property (e.g.
+    ``_core.Gaussian.mu``), passed as the class attribute rather than an
+    instance attribute. mypy has no way to spell that type precisely: a
+    class-level access of a stub `@property` is synthesized as the getter
+    function's (overloaded) type, not as `builtins.property`, so it exposes
+    `__get__` (functions are descriptors) but not `__set__`. `Any` here
+    reflects that type-checker limitation rather than an actual runtime
+    ambiguity — at runtime this is always a property-like descriptor.
+    """
+
+    def getter(self: Any) -> float:
         # nanobind property descriptors require explicit __get__/__set__ calls
         # (not getattr/setattr) to dispatch correctly from a Python subclass.
-        return parent_prop.__get__(self)
+        # parent_prop.__get__ is typed as returning Any (it is generic over
+        # every nanobind property); every validated property in this module
+        # is float-valued, so the cast documents that rather than widening it.
+        return cast(float, parent_prop.__get__(self))
 
-    def setter(self, value):
+    def setter(self: Any, value: float) -> None:
         validator(value, param_name)
         parent_prop.__set__(self, value)
 
@@ -154,7 +187,7 @@ class Gaussian(_core.Gaussian):
 
     __slots__ = ()
 
-    def __init__(self, mu=0.0, sigma=1.0):
+    def __init__(self, mu: float = 0.0, sigma: float = 1.0) -> None:
         _require_finite(mu, "Mean")
         _require_positive_finite(sigma, "Standard deviation")
         super().__init__(mu=mu, sigma=sigma)
@@ -167,7 +200,7 @@ class Gaussian(_core.Gaussian):
         "Standard deviation parameter σ.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -187,7 +220,7 @@ class Exponential(_core.Exponential):
 
     __slots__ = ()
 
-    def __init__(self, lam=1.0):
+    def __init__(self, lam: float = 1.0) -> None:
         _require_positive_finite(lam, "Lambda (rate parameter)")
         super().__init__(lam=lam)
 
@@ -198,7 +231,7 @@ class Exponential(_core.Exponential):
         "Rate parameter λ.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -220,7 +253,7 @@ class Uniform(_core.Uniform):
 
     __slots__ = ()
 
-    def __init__(self, a=0.0, b=1.0):
+    def __init__(self, a: float = 0.0, b: float = 1.0) -> None:
         _require_finite(a, "Lower bound (a)")
         _require_finite(b, "Upper bound (b)")
         if a >= b:
@@ -228,30 +261,32 @@ class Uniform(_core.Uniform):
         super().__init__(a=a, b=b)
 
     @property
-    def a(self):
+    def a(self) -> float:
         """Lower bound a."""
-        return _core.Uniform.a.__get__(self)
+        return cast(float, _core.Uniform.a.__get__(self))
 
     @a.setter
-    def a(self, value):
+    def a(self, value: float) -> None:
         _require_finite(value, "Lower bound (a)")
         if value >= self.b:
             raise ValueError("Lower bound (a) must be strictly less than upper bound (b)")
-        _core.Uniform.a.__set__(self, value)
+        # See _validated_prop's docstring: a class-level stub property access
+        # types as an overloaded function (has __get__, not __set__) to mypy.
+        cast(Any, _core.Uniform.a).__set__(self, value)
 
     @property
-    def b(self):
+    def b(self) -> float:
         """Upper bound b."""
-        return _core.Uniform.b.__get__(self)
+        return cast(float, _core.Uniform.b.__get__(self))
 
     @b.setter
-    def b(self, value):
+    def b(self, value: float) -> None:
         _require_finite(value, "Upper bound (b)")
         if value <= self.a:
             raise ValueError("Upper bound (b) must be strictly greater than lower bound (a)")
-        _core.Uniform.b.__set__(self, value)
+        cast(Any, _core.Uniform.b).__set__(self, value)
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -271,7 +306,7 @@ class Poisson(_core.Poisson):
 
     __slots__ = ()
 
-    def __init__(self, lam=1.0):
+    def __init__(self, lam: float = 1.0) -> None:
         _require_positive_finite(lam, "Lambda (rate parameter)")
         super().__init__(lam=lam)
 
@@ -279,7 +314,7 @@ class Poisson(_core.Poisson):
         _core.Poisson.lam, _require_positive_finite, "Lambda (rate parameter)", "Rate parameter λ."
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -302,34 +337,34 @@ class DiscreteUniform(_core.DiscreteUniform):
 
     __slots__ = ()
 
-    def __init__(self, a=0, b=1):
+    def __init__(self, a: int = 0, b: int = 1) -> None:
         if a > b:
             raise ValueError("Upper bound (b) must be >= lower bound (a)")
         super().__init__(a=a, b=b)
 
     @property
-    def a(self):
+    def a(self) -> int:
         """Lower bound a (integer)."""
-        return _core.DiscreteUniform.a.__get__(self)
+        return cast(int, _core.DiscreteUniform.a.__get__(self))
 
     @a.setter
-    def a(self, value):
+    def a(self, value: int) -> None:
         if value > self.b:
             raise ValueError("Lower bound (a) must be <= upper bound (b)")
-        _core.DiscreteUniform.a.__set__(self, value)
+        cast(Any, _core.DiscreteUniform.a).__set__(self, value)
 
     @property
-    def b(self):
+    def b(self) -> int:
         """Upper bound b (integer)."""
-        return _core.DiscreteUniform.b.__get__(self)
+        return cast(int, _core.DiscreteUniform.b.__get__(self))
 
     @b.setter
-    def b(self, value):
+    def b(self, value: int) -> None:
         if value < self.a:
             raise ValueError("Upper bound (b) must be >= lower bound (a)")
-        _core.DiscreteUniform.b.__set__(self, value)
+        cast(Any, _core.DiscreteUniform.b).__set__(self, value)
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -351,7 +386,7 @@ class Gamma(_core.Gamma):
 
     __slots__ = ()
 
-    def __init__(self, alpha=1.0, beta=1.0):
+    def __init__(self, alpha: float = 1.0, beta: float = 1.0) -> None:
         _require_positive_finite(alpha, "Alpha (shape parameter)")
         _require_positive_finite(beta, "Beta (rate parameter)")
         super().__init__(alpha=alpha, beta=beta)
@@ -363,7 +398,7 @@ class Gamma(_core.Gamma):
         _core.Gamma.beta, _require_positive_finite, "Beta (rate parameter)", "Rate parameter β."
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -385,7 +420,7 @@ class Beta(_core.Beta):
 
     __slots__ = ()
 
-    def __init__(self, alpha=1.0, beta=1.0):
+    def __init__(self, alpha: float = 1.0, beta: float = 1.0) -> None:
         _require_positive_finite(alpha, "Alpha (shape parameter)")
         _require_positive_finite(beta, "Beta (shape parameter)")
         super().__init__(alpha=alpha, beta=beta)
@@ -397,7 +432,7 @@ class Beta(_core.Beta):
         _core.Beta.beta, _require_positive_finite, "Beta (shape parameter)", "Shape parameter β."
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -417,7 +452,7 @@ class ChiSquared(_core.ChiSquared):
 
     __slots__ = ()
 
-    def __init__(self, k=1.0):
+    def __init__(self, k: float = 1.0) -> None:
         _require_positive_finite(k, "Degrees of freedom (k)")
         super().__init__(k=k)
 
@@ -428,7 +463,7 @@ class ChiSquared(_core.ChiSquared):
         "Degrees of freedom k.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -448,7 +483,7 @@ class StudentT(_core.StudentT):
 
     __slots__ = ()
 
-    def __init__(self, nu=1.0):
+    def __init__(self, nu: float = 1.0) -> None:
         _require_positive_finite(nu, "Degrees of freedom (nu)")
         super().__init__(nu=nu)
 
@@ -459,7 +494,7 @@ class StudentT(_core.StudentT):
         "Degrees of freedom ν.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -481,7 +516,7 @@ class LogNormal(_core.LogNormal):
 
     __slots__ = ()
 
-    def __init__(self, mu=0.0, sigma=1.0):
+    def __init__(self, mu: float = 0.0, sigma: float = 1.0) -> None:
         _require_finite(mu, "Location parameter (mu)")
         _require_positive_finite(sigma, "Scale parameter (sigma)")
         super().__init__(mu=mu, sigma=sigma)
@@ -499,7 +534,7 @@ class LogNormal(_core.LogNormal):
         "Scale parameter \u03c3 (log-stddev).",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -521,7 +556,7 @@ class Pareto(_core.Pareto):
 
     __slots__ = ()
 
-    def __init__(self, scale=1.0, alpha=1.0):
+    def __init__(self, scale: float = 1.0, alpha: float = 1.0) -> None:
         _require_positive_finite(scale, "Scale parameter (scale)")
         _require_positive_finite(alpha, "Shape parameter (alpha)")
         super().__init__(scale=scale, alpha=alpha)
@@ -539,7 +574,7 @@ class Pareto(_core.Pareto):
         "Shape parameter \u03b1 (tail index).",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -561,7 +596,7 @@ class Weibull(_core.Weibull):
 
     __slots__ = ()
 
-    def __init__(self, shape=1.0, scale=1.0):
+    def __init__(self, shape: float = 1.0, scale: float = 1.0) -> None:
         _require_positive_finite(shape, "Shape parameter (shape)")
         _require_positive_finite(scale, "Scale parameter (scale)")
         super().__init__(shape=shape, scale=scale)
@@ -579,7 +614,7 @@ class Weibull(_core.Weibull):
         "Scale parameter \u03bb.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -599,7 +634,7 @@ class Rayleigh(_core.Rayleigh):
 
     __slots__ = ()
 
-    def __init__(self, sigma=1.0):
+    def __init__(self, sigma: float = 1.0) -> None:
         _require_positive_finite(sigma, "Scale parameter (sigma)")
         super().__init__(sigma=sigma)
 
@@ -610,7 +645,7 @@ class Rayleigh(_core.Rayleigh):
         "Scale parameter \u03c3.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -632,7 +667,7 @@ class VonMises(_core.VonMises):
 
     __slots__ = ()
 
-    def __init__(self, mu=0.0, kappa=1.0):
+    def __init__(self, mu: float = 0.0, kappa: float = 1.0) -> None:
         _require_finite(mu, "Mean direction (mu)")
         _require_non_negative_finite(kappa, "Concentration (kappa)")
         super().__init__(mu=mu, kappa=kappa)
@@ -650,7 +685,7 @@ class VonMises(_core.VonMises):
         "Concentration \u03ba (\u2265 0).",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -672,22 +707,22 @@ class Binomial(_core.Binomial):
 
     __slots__ = ()
 
-    def __init__(self, n=10, p=0.5):
+    def __init__(self, n: int = 10, p: float = 0.5) -> None:
         if not isinstance(n, (int, np.integer)) or n <= 0:
             raise ValueError("n must be a positive integer")
         _require_probability(p, "Probability (p)")
         super().__init__(n=int(n), p=p)
 
     @property
-    def n(self):
+    def n(self) -> int:
         """Number of trials n (positive integer)."""
-        return _core.Binomial.n.__get__(self)
+        return cast(int, _core.Binomial.n.__get__(self))
 
     @n.setter
-    def n(self, value):
+    def n(self, value: int) -> None:
         if not isinstance(value, (int, np.integer)) or value <= 0:
             raise ValueError("n must be a positive integer")
-        _core.Binomial.n.__set__(self, int(value))
+        cast(Any, _core.Binomial.n).__set__(self, int(value))
 
     p = _validated_prop(
         _core.Binomial.p,
@@ -696,7 +731,7 @@ class Binomial(_core.Binomial):
         "Success probability p (in [0, 1]).",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -718,7 +753,7 @@ class NegativeBinomial(_core.NegativeBinomial):
 
     __slots__ = ()
 
-    def __init__(self, r=1.0, p=0.5):
+    def __init__(self, r: float = 1.0, p: float = 0.5) -> None:
         _require_positive_finite(r, "Success count (r)")
         _require_positive_probability(p, "Probability (p)")
         super().__init__(r=r, p=p)
@@ -736,7 +771,7 @@ class NegativeBinomial(_core.NegativeBinomial):
         "Success probability p (in (0, 1]).",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -759,7 +794,7 @@ class Geometric(_core.Geometric):
 
     __slots__ = ()
 
-    def __init__(self, p=0.5):
+    def __init__(self, p: float = 0.5) -> None:
         _require_positive_probability(p, "Probability (p)")
         super().__init__(p=p)
 
@@ -770,7 +805,7 @@ class Geometric(_core.Geometric):
         "Success probability p (in (0, 1]).",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -792,7 +827,7 @@ class Laplace(_core.Laplace):
 
     __slots__ = ()
 
-    def __init__(self, mu=0.0, b=1.0):
+    def __init__(self, mu: float = 0.0, b: float = 1.0) -> None:
         _require_finite(mu, "Location parameter (mu)")
         _require_positive_finite(b, "Scale parameter (b)")
         super().__init__(mu=mu, b=b)
@@ -804,7 +839,7 @@ class Laplace(_core.Laplace):
         _core.Laplace.b, _require_positive_finite, "Scale parameter (b)", "Scale parameter b."
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -828,7 +863,7 @@ class Cauchy(_core.Cauchy):
 
     __slots__ = ()
 
-    def __init__(self, x0=0.0, gamma=1.0):
+    def __init__(self, x0: float = 0.0, gamma: float = 1.0) -> None:
         _require_finite(x0, "Location parameter (x0)")
         _require_positive_finite(gamma, "Scale parameter (gamma)")
         super().__init__(x0=x0, gamma=gamma)
@@ -843,7 +878,7 @@ class Cauchy(_core.Cauchy):
         "Scale parameter \u03b3.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -865,7 +900,7 @@ class Logistic(_core.Logistic):
 
     __slots__ = ()
 
-    def __init__(self, mu=0.0, s=1.0):
+    def __init__(self, mu: float = 0.0, s: float = 1.0) -> None:
         _require_finite(mu, "Location parameter (mu)")
         _require_positive_finite(s, "Scale parameter (s)")
         super().__init__(mu=mu, s=s)
@@ -877,7 +912,7 @@ class Logistic(_core.Logistic):
         _core.Logistic.s, _require_positive_finite, "Scale parameter (s)", "Scale parameter s."
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -899,7 +934,7 @@ class Gumbel(_core.Gumbel):
 
     __slots__ = ()
 
-    def __init__(self, mu=0.0, beta=1.0):
+    def __init__(self, mu: float = 0.0, beta: float = 1.0) -> None:
         _require_finite(mu, "Location parameter (mu)")
         _require_positive_finite(beta, "Scale parameter (beta)")
         super().__init__(mu=mu, beta=beta)
@@ -914,7 +949,7 @@ class Gumbel(_core.Gumbel):
         "Scale parameter β.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -936,22 +971,22 @@ class Erlang(_core.Erlang):
 
     __slots__ = ()
 
-    def __init__(self, k=1, lam=1.0):
+    def __init__(self, k: int = 1, lam: float = 1.0) -> None:
         if not isinstance(k, (int, np.integer)) or k < 1:
             raise ValueError("k must be a positive integer")
         _require_positive_finite(lam, "Lambda (rate parameter)")
         super().__init__(k=int(k), lam=lam)
 
     @property
-    def k(self):
+    def k(self) -> int:
         """Shape parameter k (positive integer)."""
-        return _core.Erlang.k.__get__(self)
+        return cast(int, _core.Erlang.k.__get__(self))
 
     @k.setter
-    def k(self, value):
+    def k(self, value: int) -> None:
         if not isinstance(value, (int, np.integer)) or value < 1:
             raise ValueError("k must be a positive integer")
-        _core.Erlang.k.__set__(self, int(value))
+        cast(Any, _core.Erlang.k).__set__(self, int(value))
 
     lam = _validated_prop(
         _core.Erlang.lam,
@@ -960,7 +995,7 @@ class Erlang(_core.Erlang):
         "Rate parameter λ.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -982,7 +1017,7 @@ class FisherF(_core.FisherF):
 
     __slots__ = ()
 
-    def __init__(self, d1=1.0, d2=1.0):
+    def __init__(self, d1: float = 1.0, d2: float = 1.0) -> None:
         _require_positive_finite(d1, "Numerator degrees of freedom (d1)")
         _require_positive_finite(d2, "Denominator degrees of freedom (d2)")
         super().__init__(d1=d1, d2=d2)
@@ -1000,7 +1035,7 @@ class FisherF(_core.FisherF):
         "Denominator degrees of freedom d2.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -1022,7 +1057,7 @@ class InverseGamma(_core.InverseGamma):
 
     __slots__ = ()
 
-    def __init__(self, alpha=1.0, beta=1.0):
+    def __init__(self, alpha: float = 1.0, beta: float = 1.0) -> None:
         _require_positive_finite(alpha, "Alpha (shape parameter)")
         _require_positive_finite(beta, "Beta (scale parameter)")
         super().__init__(alpha=alpha, beta=beta)
@@ -1040,7 +1075,7 @@ class InverseGamma(_core.InverseGamma):
         "Scale parameter β.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -1060,7 +1095,7 @@ class HalfNormal(_core.HalfNormal):
 
     __slots__ = ()
 
-    def __init__(self, sigma=1.0):
+    def __init__(self, sigma: float = 1.0) -> None:
         _require_positive_finite(sigma, "Scale parameter (sigma)")
         super().__init__(sigma=sigma)
 
@@ -1071,7 +1106,7 @@ class HalfNormal(_core.HalfNormal):
         "Scale parameter σ.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -1091,7 +1126,7 @@ class Bernoulli(_core.Bernoulli):
 
     __slots__ = ()
 
-    def __init__(self, p=0.5):
+    def __init__(self, p: float = 0.5) -> None:
         _require_probability(p, "Success probability (p)")
         super().__init__(p=p)
 
@@ -1102,7 +1137,7 @@ class Bernoulli(_core.Bernoulli):
         "Success probability p.",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -1137,7 +1172,9 @@ class TruncatedNormal(_core.TruncatedNormal):
 
     __slots__ = ()
 
-    def __init__(self, mu=0.0, sigma=1.0, a=-math.inf, b=math.inf):
+    def __init__(
+        self, mu: float = 0.0, sigma: float = 1.0, a: float = -math.inf, b: float = math.inf
+    ) -> None:
         _require_finite(mu, "Location parameter (mu)")
         _require_positive_finite(sigma, "Scale parameter (sigma)")
         _require_not_nan(a, "Lower truncation bound (a)")
@@ -1173,7 +1210,7 @@ class TruncatedNormal(_core.TruncatedNormal):
         "Upper truncation bound b (absolute coordinates).",
     )
 
-    def fit(self, data):
+    def fit(self, data: FitData) -> None:
         super().fit(_validate_fit_data(data))
 
 
@@ -1193,13 +1230,13 @@ Normal = Gaussian
 # ---------------------------------------------------------------------------
 
 
-def _install_batch_coercion(cls, core_cls):
+def _install_batch_coercion(cls: type, core_cls: type) -> None:
     """Inject pdf / log_pdf / cdf / ppf coercion wrappers into *cls*."""
     for _name in ("pdf", "log_pdf", "cdf", "ppf"):
         _m = getattr(core_cls, _name)
 
-        def _make(m, method_name):
-            def _wrapper(self, x):
+        def _make(m: Callable[..., Any], method_name: str) -> Callable[..., Any]:
+            def _wrapper(self: Any, x: BatchInput) -> Any:
                 if method_name == "ppf":
                     return m(self, _coerce_probability_input(x))
                 return m(self, _coerce_batch_input(x))

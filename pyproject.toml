@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pylibstats"
-version = "0.7.0"
+version = "0.7.1"
 description = "Python bindings for libstats — SIMD-accelerated statistical distributions via NumPy"
 readme = "README.md"
 license = { text = "MIT" }
@@ -13,6 +13,9 @@ dependencies = ["numpy>=1.20"]
 
 [project.optional-dependencies]
 test = ["pytest>=7.0", "scipy"]
+# Pinned like ruff in CI (see ci.yml's lint job): an unpinned type checker
+# turns every mypy release into a potential red X on an unrelated push.
+lint = ["mypy==2.3.1"]
 
 [tool.scikit-build]
 # Build one CPython Stable ABI (abi3) wheel covering 3.12 and every later
@@ -41,6 +44,26 @@ venvPath = "."
 venv = ".venv"
 # _core is a compiled extension with a hand-written .pyi and no .py source.
 reportMissingModuleSource = false
+
+[tool.mypy]
+# python_version is 3.12, not this project's 3.11 floor: numpy 2.5's bundled
+# __init__.pyi uses the PEP 695 `type` alias statement unconditionally (no
+# sys.version_info guard), which mypy 2.3.1 refuses to parse below 3.12 —
+# confirmed by reproducing with --python-version 3.11 against the installed
+# numpy stub. 3.12 also matches the CI lint job's interpreter (see ci.yml).
+python_version = "3.12"
+# __init__.py is listed explicitly, not the src/pylibstats package directory:
+# __init__.pyi shadows __init__.py for any directory- or package-mode mypy
+# invocation (mypy only parses the .pyi, never the .py body, when a stub sits
+# beside it) — confirmed with `mypy --verbose src/pylibstats`, which parses
+# only __init__.pyi. Passing the .py path explicitly is the documented
+# override and is what actually type-checks the runtime code.
+files = ["src/pylibstats/__init__.py"]
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
