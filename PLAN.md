@@ -120,6 +120,14 @@ Last reconciled against live GitHub state: 2026-09-02.
   catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
 ## In Progress [OPEN]
+- **0.7.1 in PR #22** (2026-09-19, travel session): mypy adoption (#6)
+  plus the libstats pin v2.4.0 → v2.4.1 and the version bump. The pin is
+  behavior-changing for Geometric/NegativeBinomial only: counts past
+  INT_MAX (pmf, log_pdf, cdf, sample) were wrong on every platform
+  (libstats #125). `TestGeometricCountsBeyondIntMax` is two-sided against
+  the closed forms; shown 5/5 failing on a v2.4.0-source build and passing
+  on the fix. Owed after merge: signed tag v0.7.1 [tag push IS the PyPI
+  trigger — user-approved each time], GitHub release, wheels check.
 - **0.7.0 SHIPPED 2026-09-05**: PR #18 squash-merged (`6ac8233`,
   user-merged in the UI; full 13-job matrix green incl. 3.14t and
   ASan/UBSan) — libstats pin v2.3.1 → v2.4.0 plus bindings for the
