@@ -164,6 +164,18 @@ is a pyright error at each use site. `__init__.py` carries a file-level
 type; consumers type-check against `__init__.pyi`, not the source.
 Baseline: `pyright src/pylibstats` reports 0 errors.
 
+**mypy** (2026-09-19, issue #6): runs in CI (`lint` job, next to ruff), not
+just the editor. Config in `pyproject.toml` `[tool.mypy]`, targeting
+`src/pylibstats/__init__.py` explicitly rather than the `src/pylibstats`
+directory: `__init__.pyi` shadows `__init__.py` for any directory/package
+mypy invocation, so only naming the `.py` file gets the runtime module
+actually checked. `python_version = "3.12"`, not this project's 3.11 floor
+— numpy's bundled stub uses unconditional PEP 695 syntax mypy won't parse
+below 3.12; see PLAN.md Decided for the reproduction. Not full `strict`.
+```bash
+mypy
+```
+
 **C++ binding layer** (`_core.cpp`, `_common.h`): its own cppcheck
 invocation, `scripts/lint-cpp.sh` — not a copy of libstats' own CI
 cppcheck, because (a) `_common.h` is a header and needs `--language=c++`

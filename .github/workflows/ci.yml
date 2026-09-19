@@ -95,6 +95,15 @@ jobs:
           ruff check src/pylibstats tests examples
           ruff format --check src/pylibstats tests examples
 
+      - name: mypy (src/pylibstats/__init__.py)
+        # numpy + mypy only — no need to build the C++ extension: mypy
+        # resolves pylibstats._core through _core.pyi. Installed directly
+        # (not "pip install .[lint]") to avoid triggering the scikit-build-core
+        # native build in a job with no CMake/libstats setup.
+        run: |
+          pip install numpy mypy==2.3.1
+          mypy
+
       - name: Clone libstats headers at the pinned tag
         env:
           LIBSTATS_REPO: https://github.com/OldCrow/libstats.git
