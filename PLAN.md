@@ -284,8 +284,16 @@ a format check can go in green:
 1. ~~#7: ruff format pass~~ — DONE 2026-09-02 (`da098f4`, 424/424 green).
 2. ~~#5: CI lint wiring~~ — DONE 2026-09-02 (`d15687a` + suppression fix
    `3b211c9`; full matrix + lint green).
-- ~~#6 mypy adoption~~ — DONE 2026-09-19, see Decided (branch
-  `chore/mypy-adoption`, not yet merged).
+- ~~#6 mypy adoption~~ — DONE 2026-09-19, see Decided (merged as PR #22,
+  shipped in 0.7.1).
+- **Return from travel 2026-09-28.** Cross-repo task order:
+  [CORVUS-ADOPTION-WORKPLAN.md](https://github.com/OldCrow/standards/blob/main/records/CORVUS-ADOPTION-WORKPLAN.md).
+  [OPEN] The `ubuntu-latest / Python 3.14t` CI job fails at CMake
+  Python discovery (`Could NOT find Python (missing: Interpreter
+  Development.Module)`), seen 2026-09-25 on dependabot PR #23, whose
+  change (actionlint 1.76.3) cannot cause it; cause unconfirmed, and
+  `main` last ran that matrix on 2026-09-19. Fix it before the v0.8.0
+  bump — the release tag waits on green `main` CI.
 - ~~The libstats v2.4.0 catch-up~~ **DONE 2026-09-04** (PR #18 /
   0.7.0, see In Progress): the eight new distributions are bound, so
   the v2.5.0 adoption-era session is back to a pin bump only. That
