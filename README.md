@@ -63,7 +63,7 @@ pip install --no-build-isolation -ve . \
 `--no-build-isolation` requires build deps in the active environment:
 
 ```bash
-pip install "scikit-build-core>=0.10" "nanobind>=2.0"
+pip install "scikit-build-core>=0.10,<1.1" "nanobind>=2.0"
 ```
 
 ## Running tests

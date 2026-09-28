@@ -290,10 +290,24 @@ a format check can go in green:
   [CORVUS-ADOPTION-WORKPLAN.md](https://github.com/OldCrow/standards/blob/main/records/CORVUS-ADOPTION-WORKPLAN.md).
   [OPEN] The `ubuntu-latest / Python 3.14t` CI job fails at CMake
   Python discovery (`Could NOT find Python (missing: Interpreter
-  Development.Module)`), seen 2026-09-25 on dependabot PR #23, whose
-  change (actionlint 1.76.3) cannot cause it; cause unconfirmed, and
-  `main` last ran that matrix on 2026-09-19. Fix it before the v0.8.0
-  bump — the release tag waits on green `main` CI.
+  Development.Module)`) on `main` in BOTH pylibstats and pylibhmm
+  (2026-09-28, after the dependabot merges); every other job is green.
+  Discriminator: scikit-build-core 1.0.3 passes, 1.1.0 fails, with
+  CPython 3.14.7t, nanobind 3.1.0 and CMake 3.31.6 identical. 1.1.0
+  reached PyPI 2026-09-25 20:48 UTC, an hour before the first failure;
+  `requires` has no upper bound. Likely mechanism, unconfirmed: 1.1.0
+  sets `Python_FIND_ABI` for free-threaded builds on CMake 3.30+.
+  `wheels.yml` ships cp314t, so the next release tag would fail its
+  wheel build.
+  **Cap APPLIED 2026-09-28 [user]:** `pyproject.toml` requires
+  `scikit-build-core>=0.10,<1.1`. The cap is a holding measure, not the
+  fix. [OPEN] No upstream issue existed on 2026-09-28; reproduce
+  minimally, then file one at scikit-build/scikit-build-core. [OPEN]
+  Lift the cap when a release fixes it: check upstream releases at
+  every pin bump and whenever the monthly canary runs — nothing in CI
+  flags a stale cap. To test a candidate release, remove the cap on a
+  branch and open a PR; the `Python 3.14t` job is the gate. Keep
+  pylibstats and pylibhmm on the same bound.
 - ~~The libstats v2.4.0 catch-up~~ **DONE 2026-09-04** (PR #18 /
   0.7.0, see In Progress): the eight new distributions are bound, so
   the v2.5.0 adoption-era session is back to a pin bump only. That
