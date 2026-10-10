@@ -20,7 +20,7 @@ dependencies = ["numpy>=1.20"]
 test = ["pytest>=7.0", "scipy"]
 # Pinned like ruff in CI (see ci.yml's lint job): an unpinned type checker
 # turns every mypy release into a potential red X on an unrelated push.
-lint = ["mypy==2.3.1"]
+lint = ["mypy==2.4.0"]
 
 [tool.scikit-build]
 # Build one CPython Stable ABI (abi3) wheel covering 3.12 and every later
