@@ -78,3 +78,18 @@ class TestBetaFitAndSample:
 
     def test_sample_shape(self, beta_dist):
         assert beta_dist.sample(n=200, seed=1).shape == (200,)
+
+
+class TestBetaSmallPQuantile:
+    """libstats #137 (fixed in v2.5.0): inverse_beta_i stopped at an absolute
+    1e-8 and clamped to [1e-8, 1 - 1e-8], so quantiles below p ~ 1e-8 were
+    wrong by orders of magnitude. Two-sided against scipy's beta.ppf.
+    """
+
+    @pytest.mark.parametrize("p", [1e-10, 1e-15, 1e-20])
+    def test_ppf_matches_scipy_at_small_p(self, p):
+        dist = pylibstats.Beta(alpha=2.0, beta=5.0)
+        q = dist.ppf(p)
+        assert 0.0 < q < 1e-4
+        assert q == pytest.approx(sp.beta.ppf(p, 2.0, 5.0), rel=1e-8)
+        assert dist.cdf(q) == pytest.approx(p, rel=1e-6)

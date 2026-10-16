@@ -4,6 +4,7 @@ import math
 
 import numpy as np
 import pytest
+from scipy import stats as sp
 
 import pylibstats
 
@@ -132,3 +133,18 @@ class TestGaussianRepr:
         r = repr(dist)
         assert "2" in r
         assert "0.5" in r
+
+
+class TestGaussianDeepTailQuantile:
+    """libstats #158 (fixed in v2.5.0): ppf returned -inf for p below 2^-54,
+    because the inverse CDF went through erf_inv(2p - 1). Two-sided against
+    scipy's norm.ppf, so it fails on the old -inf and on a wrong finite value.
+    """
+
+    @pytest.mark.parametrize("p", [1e-20, 1e-100, 1e-300])
+    def test_ppf_is_finite_and_matches_scipy(self, p):
+        dist = pylibstats.Gaussian(0.0, 1.0)
+        q = dist.ppf(p)
+        assert math.isfinite(q)
+        assert q == pytest.approx(sp.norm.ppf(p), rel=1e-10)
+        assert dist.cdf(q) == pytest.approx(p, rel=1e-8)

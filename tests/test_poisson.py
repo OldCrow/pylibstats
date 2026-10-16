@@ -73,3 +73,17 @@ class TestPoissonFitAndSample:
         fitted = pylibstats.Poisson()
         fitted.fit(data)
         assert fitted.lam == pytest.approx(7.0, rel=0.05)
+
+
+class TestPoissonQuantileAtZero:
+    """libstats #170 (fixed in v2.5.0): ppf(p) returned 1 for every
+    p <= cdf(0), where the answer is 0. Two-sided: the quantile is the
+    smallest k with cdf(k) >= p, checked against scipy and the CDF itself.
+    """
+
+    @pytest.mark.parametrize("lam,p", [(5.0, 1e-3), (12.0, 1e-6), (0.5, 0.5)])
+    def test_ppf_is_zero_at_or_below_cdf_of_zero(self, lam, p):
+        dist = pylibstats.Poisson(lam=lam)
+        assert p <= dist.cdf(0.0)
+        assert dist.ppf(p) == 0.0
+        assert dist.ppf(p) == sp.poisson.ppf(p, lam)
