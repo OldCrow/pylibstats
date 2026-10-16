@@ -120,17 +120,20 @@ Last reconciled against live GitHub state: 2026-09-02.
   catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
 ## In Progress [OPEN]
-- **0.8.0 IN PROGRESS 2026-10-16**: libstats pin v2.4.1 → v2.5.0 (floor
-  and tag together) on branch `pin/libstats-2.5.0`; pylibstats goes to
-  **0.8.0**, a minor on the 0.5.0/0.6.0 reasoning (see Cross-Repo). No
-  binding-surface change. Verified locally on Windows (Python 3.14.7,
-  VS 2026, FetchContent at the tag, no libstats ≥ 2.5 installed): 646/646
-  pytest, suite 637 → 646 with three two-sided regression classes for
-  behaviour the pin changes (`TestGaussianDeepTailQuantile`,
-  `TestBetaSmallPQuantile`, `TestPoissonQuantileAtZero`; each fails on
-  the v2.4.1 answer). Next: PR, matrix green, merge, signed tag v0.8.0
-  [user-approved — the tag push is the PyPI trigger], wheels, GitHub
-  release, then record shipped here.
+- **0.8.0 SHIPPED 2026-10-16**: PR #31 squash-merged (`80d0c40`; matrix
+  green after one test fix — `test_binomial` inverted the tie `cdf(5)`,
+  which libstats v2.5.0 decides on the survival side above p = ½ and
+  NEON breaks to 6; it now inverts the step's midpoint and allows {5, 6}
+  at the tie), signed tag v0.8.0 pushed [user-approved — the tag push is
+  the PyPI trigger], wheels green on all five targets + sdist (run
+  38851663698), PyPI 0.8.0 live (16 files), GitHub release published.
+  Contents: libstats pin v2.4.1 → v2.5.0 (floor and tag together), no
+  binding-surface change, three two-sided regression classes
+  (`TestGaussianDeepTailQuantile`, `TestBetaSmallPQuantile`,
+  `TestPoissonQuantileAtZero`; suite 637 → 646). Issues #20 and #26
+  renumbered the same day: the corvus adoption is libstats v3.0.0, not
+  v2.5.0. Local branches pruned on Z (`pin/libstats-2.5.0`, and the
+  squash-merged `bench/issue-2-scipy-comparison` this clone still had).
 - **0.7.1 SHIPPED 2026-09-19** (travel session): PR #22 squash-merged
   (`70ea5d4`), main CI green, signed tag v0.7.1 pushed [user-approved],
   wheels green on all targets + sdist, PyPI 0.7.1 live, GitHub release
