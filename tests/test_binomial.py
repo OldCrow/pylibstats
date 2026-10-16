@@ -88,8 +88,14 @@ class TestBinomialScalar:
         assert binomial.log_pdf(5.0) == pytest.approx(math.log(pmf5), rel=1e-10)
 
     def test_ppf_round_trip(self, binomial):
-        cdf5 = binomial.cdf(5.0)
-        assert binomial.ppf(cdf5) == pytest.approx(5.0, abs=0.5)
+        # A probability strictly inside the step at k = 5 inverts to 5 on
+        # every platform. Exactly at p = cdf(5) the answer is 5 or 6: above
+        # p = 1/2 libstats decides discrete quantiles on the survival side
+        # (v2.5.0), so the tie can break on the last bit of cdf(5), and it
+        # does on NEON.
+        cdf4, cdf5 = binomial.cdf(4.0), binomial.cdf(5.0)
+        assert binomial.ppf(0.5 * (cdf4 + cdf5)) == 5.0
+        assert binomial.ppf(cdf5) in (5.0, 6.0)
 
 
 class TestBinomialBatch:
