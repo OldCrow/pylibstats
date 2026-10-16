@@ -120,6 +120,17 @@ Last reconciled against live GitHub state: 2026-09-02.
   catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
 ## In Progress [OPEN]
+- **0.8.0 IN PROGRESS 2026-10-16**: libstats pin v2.4.1 → v2.5.0 (floor
+  and tag together) on branch `pin/libstats-2.5.0`; pylibstats goes to
+  **0.8.0**, a minor on the 0.5.0/0.6.0 reasoning (see Cross-Repo). No
+  binding-surface change. Verified locally on Windows (Python 3.14.7,
+  VS 2026, FetchContent at the tag, no libstats ≥ 2.5 installed): 646/646
+  pytest, suite 637 → 646 with three two-sided regression classes for
+  behaviour the pin changes (`TestGaussianDeepTailQuantile`,
+  `TestBetaSmallPQuantile`, `TestPoissonQuantileAtZero`; each fails on
+  the v2.4.1 answer). Next: PR, matrix green, merge, signed tag v0.8.0
+  [user-approved — the tag push is the PyPI trigger], wheels, GitHub
+  release, then record shipped here.
 - **0.7.1 SHIPPED 2026-09-19** (travel session): PR #22 squash-merged
   (`70ea5d4`), main CI green, signed tag v0.7.1 pushed [user-approved],
   wheels green on all targets + sdist, PyPI 0.7.1 live, GitHub release
@@ -206,6 +217,27 @@ clean-room SIMD cos/sin at every x86 tier (#95). No binding-surface change.
 libstats v2.3.1 (the correctness patch carrying #105, LogNormal batch
 cdf(NaN) = 1) is imminent; re-bump when it is cut. The bump was verified
 locally through the FetchContent path (no libstats installed here).
+
+[2026-10-16] Bumped to libstats **v2.5.0** (floor and tag together), and
+pylibstats goes to **0.8.0** rather than 0.7.2, on the 0.5.0/0.6.0
+reasoning: libstats v2.5.0 is a correctness and accuracy release with no
+API change but numbers users observe move across the library — 75 issues,
+every distribution swept against an mpmath oracle on three ISAs with 0
+contract violations (v2.4.1: 32). Highlights reaching the bindings:
+`ppf` is finite in the deep tails (Gaussian/LogNormal below 2^-54,
+Student-t, Gamma family at every p), Beta `ppf` below p ~ 1e-8 is right
+(libstats #137), discrete `ppf` returns the smallest k with cdf(k) >= p
+(Poisson no longer returns 1 where 0 is the answer, #170; NegBin/Geometric
+no longer return their search bound near p = 1, #171), the discrete pmfs
+hold full precision at large counts (#172), von Mises CDF/quantile are a
+fixed-cost quadrature, and `sample()` streams change for Beta at small
+shapes, Fisher-F, Uniform near overflow and Gaussian (no `thread_local`
+Box–Muller spare, so seeded draws are reproducible across threads, #188).
+Costs: von Mises quantile 5–23× and Student-t quantile at large ν 7–13×
+slower per call; Gamma/Beta densities 2.6–3.4× from shape 20 (libstats
+`docs/VALIDATION_HISTORY.md`, per band). Verified locally on Windows
+through the FetchContent path: 646/646 pytest against the fetched v2.5.0
+tag, three new two-sided regression classes.
 
 [2026-08-25] Bumped to libstats **v2.3.1** (floor and tag together,
 8ef6a2b), and pylibstats goes to **0.6.1** — a patch, since libstats
