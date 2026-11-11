@@ -211,7 +211,7 @@ Three workflows:
 - `lint-workflows.yml` — actionlint + zizmor (`--min-severity medium`), on
   workflow-file changes only.
 
-The monthly canary (`schedule`) also runs `pin-currency`, which compares the
+The weekly canary (`schedule`) also runs `pin-currency`, which compares the
 `find_package(libstats ...)` floor and the `GIT_TAG` pin in `CMakeLists.txt`
 against libstats' newest release. Buildability and currency are different
 questions: every run answers the first, only the canary answers the second.

@@ -181,7 +181,7 @@ re-syncing the copy — the approach that guarantees recurrence. The copies
 are now removed instead.
 
 Currency and internal consistency are enforced mechanically by the
-`pin-currency` job in the monthly CI canary (also runnable on demand via
+`pin-currency` job in the weekly CI canary (also runnable on demand via
 `workflow_dispatch`): it fails if the floor and the tag disagree, or if
 the tag has fallen behind libstats' newest release. Bumping remains a
 deliberate act — move the floor and the tag together.
