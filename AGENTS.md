@@ -144,12 +144,20 @@ requirement.
 
 ### Linting
 
-**Python** (`src/pylibstats/__init__.py`, `tests/`, `examples/`): ruff, config
-in `pyproject.toml`. Scoped to `E`/`F`/`I`/`UP`/`B` — unlike pylibhmm, `B`
+**Pre-commit** (`.pre-commit-config.yaml`): trailing-whitespace,
+end-of-file-fixer, mixed-line-ending (LF), check-yaml/json,
+check-merge-conflict, check-case-conflict, check-added-large-files, and ruff
+(check + format). Enable locally with `python -m pip install pre-commit`, then
+`python -m pre_commit install`. The `precommit` CI job runs the same config on
+all files and is the gate; the local hook is opt-in per clone.
+
+**Python** (`src/pylibstats`, `tests/`, `examples/`, `.pyi` stubs included):
+ruff via pre-commit, config in `pyproject.toml`; its only version pin is the
+hook `rev`. Scoped to `E`/`F`/`I`/`UP`/`B` — unlike pylibhmm, `B`
 (flake8-bugbear) is clean here and fully enabled, no deferral needed.
 ```bash
-ruff check src/pylibstats tests examples
-ruff format src/pylibstats tests examples
+python -m pre_commit run ruff-check --all-files
+python -m pre_commit run ruff-format --all-files
 ```
 
 **Type checking**: pyright via the editor/agent language server only, not
@@ -164,7 +172,7 @@ is a pyright error at each use site. `__init__.py` carries a file-level
 type; consumers type-check against `__init__.pyi`, not the source.
 Baseline: `pyright src/pylibstats` reports 0 errors.
 
-**mypy** (2026-09-19, issue #6): runs in CI (`lint` job, next to ruff), not
+**mypy** (2026-09-19, issue #6): runs in CI (`lint` job), not
 just the editor. Config in `pyproject.toml` `[tool.mypy]`, targeting
 `src/pylibstats/__init__.py` explicitly rather than the `src/pylibstats`
 directory: `__init__.pyi` shadows `__init__.py` for any directory/package
@@ -199,7 +207,8 @@ Three workflows:
   cross-product: all three Python versions on Linux, oldest+newest only on
   macOS and Windows (the version axis rarely diverges by OS for a nanobind
   extension, and those runners cost 10x/2x Linux minutes). Plus a combined
-  ASan+UBSan job on Linux, and a `lint` job (ruff check + format check,
+  ASan+UBSan job on Linux, and a `precommit` job (`pre-commit run --all-files`: whitespace/EOF/line-ending
+  fixers, YAML/JSON checks, ruff check + format), and a `lint` job (mypy,
   `scripts/lint-cpp.sh` with libstats headers cloned at the pinned
   `GIT_TAG` parsed from `CMakeLists.txt`).
 - `wheels.yml` — cibuildwheel (pinned), gated on `v*` tags and
