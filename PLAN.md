@@ -71,6 +71,19 @@
   and one inline memleak suppression in `_common.h` `vec_to_numpy`
   (Ubuntu 24.04's older cppcheck cannot see the nb::capsule ownership
   transfer; local 2.21 doesn't flag it).
+- **CI and tooling [2026-11-11]** (rules and incidents: CI House Style §1,
+  §6, §8).
+  - Runner labels float, except `ubuntu-24.04-arm` in `wheels.yml`:
+    GitHub documents no floating arm64 Linux label (#41).
+  - The canaries run weekly (Monday; `ci.yml` 03:45, `wheels.yml` 03:50
+    UTC). A `canary-report` job in each opens a "Canary failed" issue, or
+    comments on the open one (#42). `pin-currency` therefore runs weekly.
+  - Pre-commit (#43): file-hygiene hooks and ruff, enforced by a
+    `precommit` CI job on all files. ruff left the `lint` job; the hook
+    `rev` is its only pin (0.17.4 since #45). `.gitattributes` sets LF.
+  - Dependabot updates the hook revs (`pre-commit` ecosystem); #45 was
+    its first such PR.
+  - `reviewdog/action-actionlint` stays at v1.83.0 or newer (#44).
 
 ## Version Pin Verification (Task 1, 2026-07-14) [DERIVED]
 The brief for this session assumed a three-way inconsistency (AGENTS.md
