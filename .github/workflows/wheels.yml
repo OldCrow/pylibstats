@@ -29,6 +29,8 @@ jobs:
           - name: linux-x86_64
             os: ubuntu-latest
             cibw_archs_linux: x86_64
+          # Pinned because GitHub documents no floating arm64 Linux label; the
+          # build itself runs in a manylinux container.
           - name: linux-aarch64
             os: ubuntu-24.04-arm
             cibw_archs_linux: aarch64
