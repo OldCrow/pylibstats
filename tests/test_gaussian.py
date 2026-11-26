@@ -148,3 +148,18 @@ class TestGaussianDeepTailQuantile:
         assert math.isfinite(q)
         assert q == pytest.approx(sp.norm.ppf(p), rel=1e-10)
         assert dist.cdf(q) == pytest.approx(p, rel=1e-8)
+
+
+class TestGaussianFitParallelVariance:
+    """libstats #308 (fixed in v2.5.1): the parallel fit() path dropped part
+    of the between-chunk variance. Ordered input makes chunk means maximally
+    unequal, so the loss is visible; two-sided against numpy's sample
+    standard deviation (fit() estimates with ddof=1).
+    """
+
+    def test_fit_on_ordered_data_matches_numpy(self):
+        data = np.linspace(-500.0, 500.0, 200_001)
+        fitted = pylibstats.Gaussian()
+        fitted.fit(data)
+        assert fitted.mu == pytest.approx(0.0, abs=1e-9)
+        assert fitted.sigma == pytest.approx(float(np.std(data, ddof=1)), rel=1e-9)

@@ -134,3 +134,39 @@ class TestCauchyRepr:
 
     def test_repr_not_empty(self, cauchy):
         assert len(repr(cauchy)) > 0
+
+
+class TestCauchyQuantileAtSubnormalP:
+    """libstats #316 (fixed in v2.5.1): ppf returned -inf at subnormal p
+    where the true quantile is finite. The overflow is in an intermediate
+    scaled by gamma, so for gamma = 1 the v2.5.0 code is already correct
+    across the whole finite window; small gamma pushes the finite window
+    deep into the subnormals and exposes it. Two-sided against the closed
+    form -gamma/tan(pi*p), which rounds to -(gamma/pi)/p in this region,
+    so it fails on the old -inf and on a wrong finite value.
+    """
+
+    @pytest.mark.parametrize("p", [1e-313, 1e-315, 5e-316])
+    def test_small_gamma_ppf_finite_at_deep_subnormal_p(self, p):
+        dist = pylibstats.Cauchy(0.0, 1e-10)
+        q = dist.ppf(p)
+        assert math.isfinite(q)
+        assert q == pytest.approx(-(1e-10 / math.pi) / p, rel=1e-9)
+
+    @pytest.mark.parametrize("p", [5e-309, 1e-308, 2e-308])
+    def test_unit_gamma_ppf_finite_at_subnormal_p(self, p):
+        dist = pylibstats.Cauchy(0.0, 1.0)
+        q = dist.ppf(p)
+        assert math.isfinite(q)
+        assert q == pytest.approx(-1.0 / (math.pi * p), rel=1e-12)
+
+    @pytest.mark.parametrize("p", [1e-300, 1e-100, 1e-20])
+    def test_ppf_deep_tail_matches_closed_form(self, p):
+        dist = pylibstats.Cauchy(0.0, 1.0)
+        assert dist.ppf(p) == pytest.approx(-1.0 / (math.pi * p), rel=1e-12)
+
+    def test_ppf_is_neg_inf_only_when_true_quantile_overflows(self):
+        # At p = 1e-310 the true unit-gamma quantile magnitude exceeds
+        # DBL_MAX, so -inf is the correct answer, not the #316 failure mode.
+        dist = pylibstats.Cauchy(0.0, 1.0)
+        assert dist.ppf(1e-310) == -math.inf
