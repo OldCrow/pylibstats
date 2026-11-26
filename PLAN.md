@@ -129,11 +129,15 @@ Last reconciled against live GitHub state: 2026-09-02.
   - #20 corvus becomes a transitive dependency at the libstats v2.5.0
     pin — wheel license text, NOTICE, Windows job budget (filed
     2026-09-17; the checklist for the v0.8.0 bump)
+  - #50 Python version review (filed 2026-11-25): the cp315 wheel gate
+    cleared (scipy 1.18.1 ships cp315/cp315t), CI matrix needs 3.15
+    legs; the 3.11 floor drop (SPEC 0, numpy 2.5 dropped it) is
+    deferred to the libstats v3.0.0 boundary.
 - Closed issues: 4 as of 2026-09-02 (#5 and #7 closed 2026-09-02 by the
   catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
 ## In Progress [OPEN]
-- **0.8.1 in preparation (2026-11-25)**: libstats pin v2.5.0 → v2.5.1
+- **0.8.1 SHIPPED 2026-11-25**: libstats pin v2.5.0 → v2.5.1
   (floor and tag together, committed directly to main as `de979b4` to
   clear the pin-currency canary; the release PR carries the rest). No
   binding-surface change. Two regression classes for the v2.5.1 fixes
@@ -149,9 +153,14 @@ Last reconciled against live GitHub state: 2026-09-02.
   oracle `np.std(ddof=1)`; fit() estimates with ddof=1 — verified: the
   2.5e-6 gap vs ddof=0 is exactly 1/(2n) at n=200001). Failure shown on
   a v2.5.0-source build: 4/4 targeted cases fail (3 small-gamma Cauchy,
-  1 Gaussian fit), pass on v2.5.1. Suite 646 → 657.
-  Remaining: PR matrix green, squash-merge, signed tag v0.8.1 (tag push
-  IS the PyPI trigger — user-approved, per 0.7.0/0.8.0 precedent).
+  1 Gaussian fit), pass on v2.5.1. Suite 646 → 657. PR #49 matrix green
+  and squash-merged (`8a1402c`), signed tag v0.8.1 pushed
+  [user-approved — tag push IS the PyPI trigger], wheels green on all
+  five targets + sdist (run 45738682734), PyPI 0.8.1 live (16 files),
+  GitHub release published (title and notes from the tag annotation —
+  note gh refuses `--notes-from-tag` combined with `--repo`; run it
+  from inside the repo). Pin-currency canary confirmed green the same
+  day via manual dispatch. Follow-up filed as #50 (see Issues).
 - **0.8.0 SHIPPED 2026-10-16**: PR #31 squash-merged (`80d0c40`; matrix
   green after one test fix — `test_binomial` inverted the tie `cdf(5)`,
   which libstats v2.5.0 decides on the survival side above p = ½ and
