@@ -133,6 +133,25 @@ Last reconciled against live GitHub state: 2026-09-02.
   catch-up commits `da098f4`/`d15687a`; CI green at `3b211c9`).
 
 ## In Progress [OPEN]
+- **0.8.1 in preparation (2026-11-25)**: libstats pin v2.5.0 → v2.5.1
+  (floor and tag together, committed directly to main as `de979b4` to
+  clear the pin-currency canary; the release PR carries the rest). No
+  binding-surface change. Two regression classes for the v2.5.1 fixes
+  visible through the bindings: `TestCauchyQuantileAtSubnormalP`
+  (libstats #316 — ppf finite at subnormal p where the answer is finite;
+  probed on a v2.5.0 build: unit gamma is already correct across its
+  whole finite window there, the -inf shows only when small gamma pushes
+  the finite window into the deep subnormals, e.g. gamma=1e-10 at
+  p=1e-313 — an intermediate overflows before the gamma scaling; oracle
+  `-(gamma/pi)/p`, plus the correct -inf at p=1e-310 where the true
+  unit-gamma quantile overflows) and `TestGaussianFitParallelVariance`
+  (libstats #308 — parallel fit() between-chunk variance, ordered-input
+  oracle `np.std(ddof=1)`; fit() estimates with ddof=1 — verified: the
+  2.5e-6 gap vs ddof=0 is exactly 1/(2n) at n=200001). Failure shown on
+  a v2.5.0-source build: 4/4 targeted cases fail (3 small-gamma Cauchy,
+  1 Gaussian fit), pass on v2.5.1. Suite 646 → 657.
+  Remaining: PR matrix green, squash-merge, signed tag v0.8.1 (tag push
+  IS the PyPI trigger — user-approved, per 0.7.0/0.8.0 precedent).
 - **0.8.0 SHIPPED 2026-10-16**: PR #31 squash-merged (`80d0c40`; matrix
   green after one test fix — `test_binomial` inverted the tie `cdf(5)`,
   which libstats v2.5.0 decides on the survival side above p = ½ and
